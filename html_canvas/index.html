@@ -1,15 +1,28 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Page Title</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-  <script src="main.js"></script>
+  
 </head>
+
 <body>
   <h1>Page Title</h1>
   <p>This is sample page.</p>
+  <canvas id="canvas" width="700" height="500"></canvas>
+  <br>
+  <label>色
+    <input id="color" type="color">
+  </label>
+  <label>太さ
+    <input id="width" type="number" min="1" max="30">
+  </label>
+  <input type="button" id="delete_canvas" value="クリア" onClick="delete_canvas()">
+  <input type="image" id="pencil" src="1.png" width="35px" class="active" onClick="tool(1)">
+  <input type="image" id="eraser" src="2.png" width="35px" onClick="tool(2)">
+
 </body>
+<script src="main.js"></script>
 </html>
