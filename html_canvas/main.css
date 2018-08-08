@@ -1,15 +1,15 @@
 body {
-    background: #eee;
+	background: #eee;
 }
 #canvas {
-    margin: 10px;
-    background: #ffffff;
-    border: 1px solid #aaaaaa;
+	margin: 10px;
+	background: #ffffff;
+	border: 1px solid #aaaaaa;
 }
 input[type="image"]{
-    padding: 2px;
-    outline: none;
+	padding: 2px;
+	outline: none;
 }
 input[type="image"].active{
-    background-color: #fff;
+	background-color: #fff;
 }
