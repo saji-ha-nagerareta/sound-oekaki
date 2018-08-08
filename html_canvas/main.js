@@ -18,6 +18,12 @@ canvas.addEventListener('mousedown', function (e) {
 canvas.addEventListener('mouseup', function () {
     drawing = false;
 });
+
+// マウスが描画領域から出た場合の処理
+// canvas.addEventListener('mouseover', function () {
+//     drawing = false;
+// });
+
 // 描画の処理
 function draw_canvas(e) {
     // drawingがtrueじゃなかったら返す
