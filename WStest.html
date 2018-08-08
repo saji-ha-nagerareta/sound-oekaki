@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>websocket chat</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script>
+      $(function() {
+        socket = new WebSocket("ws://172.24.100.7:8888/soundOekaki");
+        socket.onopen = function() {};
+        socket.onmessage = function(e) {
+          $("#msgbox").append($('<p>'+e.data+'</p>'));
+        };
+        $('#send').click(function(){
+          socket.send($('#msg').val());
+          $('#msg').val('');
+        });
+        $('#msg').keydown(function(e) {
+          if (e.keyCode == 13) {
+            socket.send($('#msg').val());
+            $('#msg').val('');
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+      <h1>Websocket Chat Room</h1>
+      </div>
+      <div class="row">
+        <div class="col-xs-5">
+          <div class="input-group">
+            <input id="msg" type="text" class="form-control" placeholder="put your message...">
+            <span class="input-group-btn">
+              <button id="send" class="btn btn-primary" type="button">Send</button>
+            </span>
+          </div>
+        </div>
+        <div class="col-xs-7">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Messages</h3>
+            </div>
+            <div id="msgbox" class="panel-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
