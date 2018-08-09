@@ -41,13 +41,21 @@
       <div class="card-img-bottom">
         <canvas id="canvas"></canvas>
       </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-placement="bottom" onclick="delete_canvas()">
+          Delete Canvas
+        </button>
+        <button id="btn-color-picker" type="button" class="btn btn-outline-primary" data-toggle="tooltip" data-placement="bottom">
+          Pick Color
+        </button>
+      </div>
       <hr>
     </div>
 
 
     <br>
     <label>色
-      <input id="color" type="color">
+      <input id="input-color-picker" type="color">
     </label>
     <label>太さ
       <input id="width" type="number" min="1" max="30">

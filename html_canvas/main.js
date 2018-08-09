@@ -8,7 +8,7 @@ var ctx = canvas.getContext('2d');
 
 // 描画の処理
 function draw_canvas(e) {
-	console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
+	// console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
 	// drawingがtrueじゃなかったら返す
 	if (!drawing) {
 		return
@@ -20,7 +20,7 @@ function draw_canvas(e) {
 	// var y = e.clientY - rect.top;
 	var y = e.offsetY;
 	var w = document.getElementById('width').value;
-	var color = document.getElementById('color').value;
+	var color = document.getElementById('input-color-picker').value;
 	var r = parseInt(color.substring(1, 3), 16);
 	var g = parseInt(color.substring(3, 5), 16);
 	var b = parseInt(color.substring(5, 7), 16);
@@ -61,11 +61,12 @@ function draw_brush(e) {
 // クリアボタンクリック時
 // クリアボタンクリックした時にアラートを表示
 function delete_canvas() {
-	ret = confirm('canvasの内容を削除します。');
-	// アラートで「OK」を選んだ時
-	if (ret == true) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-	}
+	// ret = confirm('canvasの内容を削除します。');
+	// // アラートで「OK」を選んだ時
+	// if (ret == true) {
+	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	// }
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 var pen = document.getElementById('pencil');
 var era = document.getElementById('eraser');
@@ -93,6 +94,17 @@ function tool(btnNum) {
 // }
 
 // Ready DOM
+
+function canvasRetinization() {
+	// Retina Support
+	var canvasX = parseInt(window.getComputedStyle(canvas).getPropertyValue('width'));
+	var canvasY = parseInt(window.getComputedStyle(canvas).getPropertyValue('height'));
+
+	canvas.width = canvasX * 2;
+	canvas.height = canvasY * 2;
+	ctx.scale(2, 2);
+}
+
 $(document).ready(function () {
 	// -----EVENT LISTENER-----
 	// canvas.addEventListener('mousemove', draw_brush);
@@ -109,20 +121,26 @@ $(document).ready(function () {
 		drawing = false;
 	});
 
-	// Retina Support
-	var canvasX = parseInt(window.getComputedStyle(canvas).getPropertyValue('width'));
-	var canvasY = parseInt(window.getComputedStyle(canvas).getPropertyValue('height'));
-
-	canvas.width = canvasX * 2;
-	canvas.height = canvasY * 2;
-	ctx.scale(2, 2);
-
 	// マウスが描画領域から出た場合の処理
 	canvas.addEventListener('mouseover', function () {
 		drawing = false;
 	});
-	// resize();
-	// $(window).on("resize", function () {
-	// 	resize();
+
+	$('#btn-color-picker').click(function () {
+		$('#input-color-picker').trigger('click');
+	});
+
+	// for Debug
+	// $('#input-color-picker').click(function () {
+	// console.log("Clicked!");
 	// });
+	// $('#btn-color-picker').click(function () {
+	// 	console.log("Clicked!");
+	// });
+	// $(document).on('click', '#btn-color-picker', function () {
+	// console.log("Clicked!");
+	// })
+
+	canvasRetinization();
+	$(window).on("resize", canvasRetinization);
 });

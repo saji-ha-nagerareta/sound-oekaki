@@ -22,3 +22,7 @@ input[type="image"]{
 input[type="image"].active{
 	background-color: #fff;
 }
+
+input[type="color"]{
+	display: none;
+}
