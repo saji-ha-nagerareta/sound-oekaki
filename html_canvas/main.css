@@ -1,5 +1,6 @@
 .container{
-	margin-top: 20px;
+	margin-top: 30px;
+	margin-bottom: 30px;
 }
 
 body {
@@ -25,4 +26,11 @@ input[type="image"].active{
 
 input[type="color"]{
 	display: none;
+}
+input#pen-size {
+	text-align: right;
+}
+
+img {
+	display: none
 }

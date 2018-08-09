@@ -1,13 +1,21 @@
 // ref from: https://kigiroku.com/frontend/canvas_draw.html
-var drawing = false;
+
+var drawing = true;
+
 // 前回の座標を記録する（初期値：０）
 var before_x = 0;
 var before_y = 0;
+
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
+var draw_style = true;
+
 // 描画の処理
-function draw_canvas(e) {
+
+
+
+function draw_pencil(e) {
 	// console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
 	// drawingがtrueじゃなかったら返す
 	if (!drawing) {
@@ -15,11 +23,9 @@ function draw_canvas(e) {
 	};
 
 	var rect = e.target.getBoundingClientRect();
-	// var x = e.clientX - rect.left;
 	var x = e.offsetX;
-	// var y = e.clientY - rect.top;
 	var y = e.offsetY;
-	var w = document.getElementById('width').value;
+	var w = document.getElementById('pen-size').value;
 	var color = document.getElementById('input-color-picker').value;
 	var r = parseInt(color.substring(1, 3), 16);
 	var g = parseInt(color.substring(3, 5), 16);
@@ -41,17 +47,14 @@ function draw_canvas(e) {
 }
 
 function draw_brush(e) {
-	console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
+	// console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
 	if (!drawing) {
 		return;
 	}
-
-	// var img = document.getElementById("img-pen-style")
 	var penImg = $('#img-pen-style')[0];
 
-	var rect = e.target.getBoundingClientRect();
-	var x = e.clientX - rect.left;
-	var y = e.clientY - rect.top;
+	var x = e.offsetX;
+	var y = e.offsetY;
 	var w = penImg.naturalWidth;
 	var h = penImg.naturalHeight;
 
@@ -108,7 +111,7 @@ function canvasRetinization() {
 $(document).ready(function () {
 	// -----EVENT LISTENER-----
 	// canvas.addEventListener('mousemove', draw_brush);
-	canvas.addEventListener('mousemove', draw_canvas);
+	canvas.addEventListener('mousemove', draw_style ? draw_brush : draw_pencil);
 
 	canvas.addEventListener('mousedown', function (e) {
 		drawing = true;
@@ -129,17 +132,6 @@ $(document).ready(function () {
 	$('#btn-color-picker').click(function () {
 		$('#input-color-picker').trigger('click');
 	});
-
-	// for Debug
-	// $('#input-color-picker').click(function () {
-	// console.log("Clicked!");
-	// });
-	// $('#btn-color-picker').click(function () {
-	// 	console.log("Clicked!");
-	// });
-	// $(document).on('click', '#btn-color-picker', function () {
-	// console.log("Clicked!");
-	// })
 
 	canvasRetinization();
 	$(window).on("resize", canvasRetinization);
