@@ -5,24 +5,67 @@
   <meta charset="utf-8" />
   <title>Page Title</title>
   <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-  
+  <!-- jQuery -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+  <!-- Material Design for Bootstrap -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css"
+    integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
+    crossorigin="anonymous"></script>
+
+
 </head>
 
 <body>
-  <h1>Page Title</h1>
-  <p>This is sample page.</p>
-  <canvas id="canvas" width="700" height="500"></canvas>
-  <br>
-  <label>色
-    <input id="color" type="color">
-  </label>
-  <label>太さ
-    <input id="width" type="number" min="1" max="30">
-  </label>
-  <input type="button" id="delete_canvas" value="クリア" onClick="delete_canvas()">
-  <input type="image" id="pencil" src="1.png" width="35px" class="active" onClick="tool(1)">
-  <input type="image" id="eraser" src="2.png" width="35px" onClick="tool(2)">
+  <div class="container">
+    <div class="jumbotron text-center">
+      <h1 class="display-2">
+        <code>sound-oekaki</code>
+      </h1>
+      <hr>
+      <p>HTML Canvas を利用した描画部分の開発サンプル</p>
+    </div>
+
+    <!-- <h4>Pen Style</h4>
+    <img src="./pen.png" id="img-pen-style" alt="pen.png" , width="128"> -->
+
+    <div class="card">
+      <div class="card-header">
+        <div class="display-4">Canvas</div>
+      </div>
+      <div class="card-img-bottom">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-placement="bottom" onclick="delete_canvas()">
+          Delete Canvas
+        </button>
+        <button id="btn-color-picker" type="button" class="btn btn-outline-primary" data-toggle="tooltip" data-placement="bottom">
+          Pick Color
+        </button>
+      </div>
+      <hr>
+    </div>
+
+
+    <br>
+    <label>色
+      <input id="input-color-picker" type="color">
+    </label>
+    <label>太さ
+      <input id="width" type="number" min="1" max="30">
+    </label>
+    <input type="button" id="delete_canvas" value="クリア" onClick="delete_canvas()">
+    <input type="image" id="pencil" src="1.png" width="35px" class="active" onClick="tool(1)">
+    <input type="image" id="eraser" src="2.png" width="35px" onClick="tool(2)">
+  </div>
 
 </body>
 <script src="main.js"></script>
+
 </html>
