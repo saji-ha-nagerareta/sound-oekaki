@@ -49,8 +49,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
-        print(message)
-        print("roomID:" + self.path_args[0])
+        print("roomID:" + self.path_args[0]+"    msg:"+message)
         for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
                 continue
