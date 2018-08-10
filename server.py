@@ -1,6 +1,11 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import json
+import os
+
+# 各ルーム接続者
+ws_con = {}
 
 
 # ルート
@@ -23,33 +28,37 @@ class PenInfoHandler(tornado.web.RequestHandler):
 # 描画情報ブロードキャスト
 class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
     # 接続者
-    waiters = set()
+    global ws_con
 
     # すべての通信を受け入れる設定
     def check_origin(self, origin):
         return True
 
     def open(self, *args, **kwargs):
-        self.waiters.add(self)
-        print(args[0])  # ルームID
+        if (args[0] not in ws_con):
+            ws_con[args[0]] = [self]
+        else:
+            ws_con[args[0]].append(self)
+        print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
         print(message)
         print("roomID:" + self.path_args[0])
-        for waiter in self.waiters:
+        for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
                 continue
             waiter.write_message(message)  # デフォルトでバイナリはfalseなのでbinaryを送るときは変える
 
     def on_close(self):
-        self.waiters.remove(self)
+        ws_con[self.path_args[0]].remove(self)
+        print("[CLOSE] room:" + self.path_args[0] + "   Member:" + str(len(ws_con[self.path_args[0]])))
 
 
 # 部屋情報
 class RoomHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("room index")
+        self.write(json.dumps(ws_con))
 
     def post(self):
         self.write("create room")
@@ -57,19 +66,24 @@ class RoomHandler(tornado.web.RequestHandler):
 
 # テスト用ページ
 class test(tornado.web.RequestHandler):
-    def get(self):
-        self.render('WStest.html')
+    def get(self, *args):
+        #loader = tornado.web.template.Loader(b"templates")
+        #self.render(loader.load(b"WStest.html").generate(roomname=args[0]))
+        self.render("WStest.html",roomname=args[0])
 
 
 def make_app():
+    BASE_DIR = os.path.dirname(__file__)
     return tornado.web.Application([
         # ルーティング
         (r"/", MainHandler),
         (r"/pen", PenInfoHandler),
         (r'/soundOekaki/(.*)', broadcastDrawInfoHandler),
         (r'/room', RoomHandler),
-        (r'/test', test)
-    ])
+        (r'/test/(.*)', test)
+    ],
+        template_path = os.path.join(BASE_DIR, "templates")
+    )
 
 
 if __name__ == "__main__":
