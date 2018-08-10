@@ -7,7 +7,7 @@
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script>
       $(function() {
-        socket = new WebSocket("ws://localhost:8888/soundOekaki");
+        socket = new WebSocket("ws://localhost:8888/soundOekaki/aaa");
         socket.onopen = function() {};
         socket.onmessage = function(e) {
           $("#msgbox").append($('<p>'+e.data+'</p>'));

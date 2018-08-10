@@ -31,19 +31,29 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
 
     def open(self, *args, **kwargs):
         self.waiters.add(self)
-        print(args)
-        print(kwargs)
+        print(args[0])  # ルームID
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
         print(message)
+        print("roomID:" + self.path_args[0])
         for waiter in self.waiters:
             if waiter == self:
                 continue
-            waiter.write_message(message) #デフォルトでバイナリはfalseなのでbinaryを送るときは変える
+            waiter.write_message(message)  # デフォルトでバイナリはfalseなのでbinaryを送るときは変える
 
     def on_close(self):
         self.waiters.remove(self)
+
+
+# 部屋情報
+class RoomHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("room index")
+
+    def post(self):
+        self.write("create room")
+
 
 # テスト用ページ
 class test(tornado.web.RequestHandler):
@@ -55,8 +65,9 @@ def make_app():
     return tornado.web.Application([
         # ルーティング
         (r"/", MainHandler),
-        (r"/penInfo", PenInfoHandler),
-        (r'/soundOekaki', broadcastDrawInfoHandler),
+        (r"/pen", PenInfoHandler),
+        (r'/soundOekaki/(.*)', broadcastDrawInfoHandler),
+        (r'/room', RoomHandler),
         (r'/test', test)
     ])
 
