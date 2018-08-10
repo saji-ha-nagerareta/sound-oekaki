@@ -7,7 +7,7 @@ import os
 # 各ルーム接続者
 ws_con = {}
 
-def getRoomInfo():
+def getRoomList():
     RoomInfo = {}
     for roomName,connections in ws_con.items():
         RoomInfo[roomName] = len(connections)
@@ -64,7 +64,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
 # 部屋情報
 class RoomHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write(json.dumps(getRoomInfo()))
+        self.write(json.dumps(getRoomList()))
 
     def post(self):
         self.write("create room")
