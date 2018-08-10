@@ -27,10 +27,7 @@ input[type="image"].active{
 input[type="color"]{
 	display: none;
 }
-input#pen-size {
-	text-align: right;
-}
 
 img {
-	display: none
+	display: none;
 }

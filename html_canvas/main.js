@@ -9,7 +9,7 @@ var before_y = 0;
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
-var draw_style = true;
+var draw_style = false;
 
 // 描画の処理
 
@@ -127,6 +127,23 @@ $(document).ready(function () {
 	// マウスが描画領域から出た場合の処理
 	canvas.addEventListener('mouseover', function () {
 		drawing = false;
+	});
+
+	$(document).on('click', '.number-spinner button', function () {
+		var btn = $(this),
+			oldValue = btn.closest('.number-spinner').find('input').val().trim(),
+			newVal = 0;
+
+		if (btn.attr('data-dir') == 'up') {
+			newVal = parseInt(oldValue) + 1;
+		} else {
+			if (oldValue > 1) {
+				newVal = parseInt(oldValue) - 1;
+			} else {
+				newVal = 1;
+			}
+		}
+		btn.closest('.number-spinner').find('input').val(newVal);
 	});
 
 	$('#btn-color-picker').click(function () {
