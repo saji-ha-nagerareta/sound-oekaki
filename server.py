@@ -7,6 +7,12 @@ import os
 # 各ルーム接続者
 ws_con = {}
 
+def getRoomInfo():
+    RoomInfo = {}
+    for roomName,connections in ws_con.items():
+        RoomInfo[roomName] = len(connections)
+    return RoomInfo
+
 
 # ルート
 class MainHandler(tornado.web.RequestHandler):
@@ -58,7 +64,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
 # 部屋情報
 class RoomHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write(json.dumps(ws_con))
+        self.write(json.dumps(getRoomInfo()))
 
     def post(self):
         self.write("create room")
@@ -67,8 +73,6 @@ class RoomHandler(tornado.web.RequestHandler):
 # テスト用ページ
 class test(tornado.web.RequestHandler):
     def get(self, *args):
-        #loader = tornado.web.template.Loader(b"templates")
-        #self.render(loader.load(b"WStest.html").generate(roomname=args[0]))
         self.render("WStest.html",roomname=args[0])
 
 
