@@ -7,9 +7,10 @@ import os
 # 各ルーム接続者
 ws_con = {}
 
+
 def getRoomList():
     RoomInfo = {}
-    for roomName,connections in ws_con.items():
+    for roomName, connections in ws_con.items():
         RoomInfo[roomName] = len(connections)
     return RoomInfo
 
@@ -49,7 +50,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
-        print("roomID:" + self.path_args[0]+"    msg:"+message)
+        print("roomID:" + self.path_args[0] + "    msg:" + message)
         for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
                 continue
@@ -63,7 +64,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
 # 部屋情報
 class RoomHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write(json.dumps(getRoomList()))
+        self.write(getRoomList())
 
     def post(self):
         self.write("create room")
@@ -72,7 +73,7 @@ class RoomHandler(tornado.web.RequestHandler):
 # テスト用ページ
 class test(tornado.web.RequestHandler):
     def get(self, *args):
-        self.render("WStest.html",roomname=args[0])
+        self.render("WStest.html", roomname=args[0])
 
 
 def make_app():
@@ -85,7 +86,7 @@ def make_app():
         (r'/room', RoomHandler),
         (r'/test/(.*)', test)
     ],
-        template_path = os.path.join(BASE_DIR, "templates")
+        template_path=os.path.join(BASE_DIR, "templates")
     )
 
 
