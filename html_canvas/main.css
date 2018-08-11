@@ -28,6 +28,10 @@ input[type="color"]{
 	display: none;
 }
 
+input#pen-size {
+	min-width: 30px;
+}
+
 img {
 	display: none;
 }

@@ -43,7 +43,12 @@
       <div class="card-footer">
         <div class="row" id="paint-toolbox">
           <div class="col">
-            <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-placement="bottom" onclick="delete_canvas()">
+            <button disabled id="btn-undo" class="btn btn-outline-info" data-toggle="tooltip" data-placement="bottom">
+              UNDO (0)
+            </button>
+          </div>
+          <div class="col">
+            <button id="btn-clear-canvas" type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-placement="bottom">
               <i class="fa fa-trash fa-lg" aria-hidden="true"></i>
             </button>
           </div>
@@ -54,24 +59,31 @@
             <input id="input-color-picker" type="color">
           </div>
           <div class="col">
-              <div class="input-group number-spinner">
-                <span class="input-group-btn">
-                  <button class="btn btn-default" data-dir="dwn">
-                    <i class="fa fa-minus fa-lg" aria-hidden="true"></i>
-                  </button>
-                </span>
-                <input type="text" id="pen-size" class="form-control text-center" value="1">
-                <span class="input-group-btn">
-                  <button class="btn btn-default" data-dir="up">
-                    <i class="fa fa-plus fa-lg" aria-hidden="true"></i>
-                  </button>
-                </span>
-              </div>
+            <div class="input-group number-spinner">
+              <span class="input-group-btn">
+                <button class="btn btn-default" data-dir="dwn">
+                  <i class="fa fa-minus fa-lg" aria-hidden="true"></i>
+                </button>
+              </span>
+              <input type="text" id="pen-size" class="form-control text-center" value="1">
+              <span class="input-group-btn">
+                <button class="btn btn-default" data-dir="up">
+                  <i class="fa fa-plus fa-lg" aria-hidden="true"></i>
+                </button>
+              </span>
+            </div>
+          </div>
+          <div class="col">
+            <button id="btn-draw-select" class="btn btn-raised btn-secondary">
+              Pen
+            </button>
           </div>
         </div>
       </div>
 
     </div>
+    
+    
     <img src="./pen.png" alt="pen.png" id="img-pen-style">
   </div>
 
