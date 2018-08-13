@@ -5,6 +5,7 @@ $("document").ready(function () {
 	var color = $("#input-color-picker");
 	var width = $("#pen-size");
 	var ctx2d = canvas[0].getContext("2d");
+	var pLast = { 'x': 0, 'y': 0 };
 
 	var isDrawing = false;
 	var isBrushDrawing = false;
@@ -43,8 +44,9 @@ $("document").ready(function () {
 					isCanvasSaved = true;
 				}
 				// Drawing
-				drawing(isBrushDrawing, ctx2d, ev, color, width);
+				drawing(isBrushDrawing, ctx2d, ev, pLast, color, width);
 			}
+			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		},
 		"mouseout": function (ev) {
 			isDrawing = false;
@@ -110,21 +112,46 @@ function htmlCanvasRetinization(jqCanvas, canvas2dCtx) {
 	canvas2dCtx.scale(2, 2);
 }
 
-function drawing(flag, canvas2dCtx, mouseEvent, jqColor, jqWidth) {
+
+function calcDistance(p0, p1) {
+	return Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2));
+}
+
+function calcAngle(p0, p1) {
+	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
+}
+
+function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth) {
 	var ctx = canvas2dCtx;
-	var ev = mouseEvent;
+	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
 	var penImg = $("img#img-pen-style")[0];
 
+	var dist = calcDistance(pLast, pCurrent);
+	var angl = calcAngle(pLast, pCurrent);
 
-	if (flag) {
-		ctx.drawImage(penImg, ev.offsetX - 0.5 * penImg.naturalWidth, ev.offsetY - 0.5 * penImg.naturalHeight);
-	} else {
-		// Draw line
+	console.log(`Dist: ${dist}, Angle: ${angl}`);
+
+	// Set line style
+	if (!flag) {
 		ctx.lineCap = ctx.lineJoin = "round";
 		ctx.strokeStyle = jqColor.val();
 		ctx.lineWidth = parseInt(jqWidth.val());
-		ctx.lineTo(ev.offsetX, ev.offsetY);
-		ctx.stroke();
+	}
+
+
+	for (var i = 0; i < dist; i++) {
+		x = pLast.x + i * Math.cos(angl);
+		y = pLast.y + i * Math.sin(angl);
+
+		if (flag) {
+			// Draw brush
+			ctx.drawImage(penImg, x - 0.5 * penImg.naturalWidth, y - 0.5 * penImg.naturalHeight);
+		} else {
+			// Draw line
+
+			ctx.lineTo(x, y);
+			ctx.stroke();
+		}
 	}
 }
 
