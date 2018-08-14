@@ -19,7 +19,7 @@ def getRoomList():
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         arg = self.request.arguments
-        self.render('main.html')
+        self.render('index.html')
         print(arg)
 
 
@@ -86,7 +86,8 @@ def make_app():
         (r'/room', RoomHandler),
         (r'/test/(.*)', test)
     ],
-        template_path=os.path.join(BASE_DIR, "templates")
+        template_path=os.path.join(BASE_DIR, "templates"),
+        static_path= os.path.join(BASE_DIR, "static")
     )
 
 
