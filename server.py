@@ -29,7 +29,21 @@ class PenInfoHandler(tornado.web.RequestHandler):
         self.write("test")
 
     def post(self):
-        pass
+        if not self.request.files:
+            print(self.request.path + " Wrong request:No file.")
+            raise tornado.web.HTTPError(400)
+        else:
+            # 仮実装。self.request.filesのキーは送信側のフィールド名依存
+            file = self.request.files["file"][0]
+            # Todo:ふるわらがいい感じにしてくれる
+            # print(file)
+            # 受け取ったファイルのやり取りの仕方は要検討
+            # self.request.files["file"][0]["filename"]:ファイル名
+            #                               ["body"]:バイナリ
+            #                               ["content_type"]:
+            dump = open("../tmp.wav",'wb')
+            dump.write(file["body"])
+            self.write(file.filename+"  "+file.content_type)
 
 
 # 描画情報ブロードキャスト
@@ -93,4 +107,6 @@ def make_app():
 if __name__ == "__main__":
     app = make_app()
     app.listen(8888)
+    print("server running")
     tornado.ioloop.IOLoop.current().start()
+
