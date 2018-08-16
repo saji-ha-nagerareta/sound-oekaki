@@ -1,146 +1,189 @@
-// ref from: https://kigiroku.com/frontend/canvas_draw.html
-var drawing = false;
-// 前回の座標を記録する（初期値：０）
-var before_x = 0;
-var before_y = 0;
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
+/* REQUIRE: jQuery */
 
-// 描画の処理
-function draw_canvas(e) {
-	// console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
-	// drawingがtrueじゃなかったら返す
-	if (!drawing) {
-		return
-	};
+$("document").ready(function () {
+	var canvas = $("#canvas");
+	var color = $("#input-color-picker");
+	var width = $("#pen-size");
+	var ctx2d = canvas[0].getContext("2d");
+	var pLast = { 'x': 0, 'y': 0 };
 
-	var rect = e.target.getBoundingClientRect();
-	// var x = e.clientX - rect.left;
-	var x = e.offsetX;
-	// var y = e.clientY - rect.top;
-	var y = e.offsetY;
-	var w = document.getElementById('width').value;
-	var color = document.getElementById('input-color-picker').value;
-	var r = parseInt(color.substring(1, 3), 16);
-	var g = parseInt(color.substring(3, 5), 16);
-	var b = parseInt(color.substring(5, 7), 16);
+	var isDrawing = false;
+	var isBrushDrawing = false;
+	var isCanvasSaved = false;
+	var SIZE_UNDO_STACK = 20;
+	var undoStack = new Array();
 
 
-	// 描画
-	ctx.lineCap = 'round';
-	ctx.strokeStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
-	ctx.lineWidth = w;
-	ctx.beginPath();
-	ctx.moveTo(before_x, before_y);
-	ctx.lineTo(x, y);
-	ctx.stroke();
-	ctx.closePath();
-	// 描画最後の座標を前回の座標に代入する
-	before_x = x;
-	before_y = y;
-}
+	/* init: HTML Canvas */
+	htmlCanvasRetinization(canvas, ctx2d);
+	// set lineWidth
+	ctx2d.lineWidth = 10;
+	// set endpoints
+	ctx2d.lineCap = "round";
+	ctx2d.lineJoin = "bevel";
 
-function draw_brush(e) {
-	console.log(`Position: (${e.offsetX}, ${e.offsetY})`);
-	if (!drawing) {
-		return;
-	}
-
-	// var img = document.getElementById("img-pen-style")
-	var penImg = $('#img-pen-style')[0];
-
-	var rect = e.target.getBoundingClientRect();
-	var x = e.clientX - rect.left;
-	var y = e.clientY - rect.top;
-	var w = penImg.naturalWidth;
-	var h = penImg.naturalHeight;
-
-	ctx.drawImage(penImg, x - 0.5 * w, y - 0.5 * h);
-}
-
-// クリアボタンクリック時
-// クリアボタンクリックした時にアラートを表示
-function delete_canvas() {
-	// ret = confirm('canvasの内容を削除します。');
-	// // アラートで「OK」を選んだ時
-	// if (ret == true) {
-	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	// }
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-var pen = document.getElementById('pencil');
-var era = document.getElementById('eraser');
-
-// 鉛筆と消しゴムの切り替え
-function tool(btnNum) {
-	// クリックされボタンが鉛筆だったら
-	if (btnNum == 1) {
-		ctx.globalCompositeOperation = 'source-over';
-		pen.className = 'active';
-		era.className = '';
-	}
-	// クリックされボタンが消しゴムだったら
-	else if (btnNum == 2) {
-		ctx.globalCompositeOperation = 'destination-out';
-		pen.className = '';
-		era.className = 'active';
-	}
-}
-
-// Canvas サイズをレスポンシブに変更
-// REF: https://stackoverflow.com/questions/34772957/how-to-make-canvas-responsive
-// function resize() {
-// 	$("#canvas").outerHeight($(window).height() - $("#canvas").offset().top - Math.abs($("#canvas").outerHeight(true) - $("#canvas").outerHeight()));
-// }
-
-// Ready DOM
-
-function canvasRetinization() {
-	// Retina Support
-	var canvasX = parseInt(window.getComputedStyle(canvas).getPropertyValue('width'));
-	var canvasY = parseInt(window.getComputedStyle(canvas).getPropertyValue('height'));
-
-	canvas.width = canvasX * 2;
-	canvas.height = canvasY * 2;
-	ctx.scale(2, 2);
-}
-
-$(document).ready(function () {
-	// -----EVENT LISTENER-----
-	// canvas.addEventListener('mousemove', draw_brush);
-	canvas.addEventListener('mousemove', draw_canvas);
-
-	canvas.addEventListener('mousedown', function (e) {
-		drawing = true;
-		var rect = e.target.getBoundingClientRect();
-		before_x = e.clientX - rect.left;
-		before_y = e.clientY - rect.top;
+	/* init: Event Listener */
+	canvas.on({
+		"mousedown": function (ev) {
+			isCanvasSaved = false;
+			isDrawing = true;
+		},
+		"mouseout": function (ev) {
+			isDrawing = false;
+			ctx2d.beginPath();
+		},
+		"mouseup": function (ev) {
+			isDrawing = false;
+			ctx2d.beginPath();
+		},
+		"mousemove": function (ev) {
+			if (isDrawing) {
+				// Save Canvas;
+				if (!isCanvasSaved) {
+					canvasPush(undoStack, ctx2d, SIZE_UNDO_STACK)
+					isCanvasSaved = true;
+				}
+				// Drawing
+				drawing(isBrushDrawing, ctx2d, ev, pLast, color, width);
+			}
+			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
+		},
+		"mouseout": function (ev) {
+			isDrawing = false;
+		}
 	});
 
-	canvas.addEventListener('mouseup', function () {
-		drawing = false;
+	$("#btn-clear-canvas").on("click", function (ev) {
+		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
+		ctx2d.beginPath();
 	});
 
-	// マウスが描画領域から出た場合の処理
-	canvas.addEventListener('mouseover', function () {
-		drawing = false;
+	$("#btn-undo").on("click", function (ev) {
+		canvasPop(undoStack, ctx2d);
 	});
 
-	$('#btn-color-picker').click(function () {
-		$('#input-color-picker').trigger('click');
+	$("#btn-color-picker").on("click", function () {
+		$("#input-color-picker").trigger("click");
 	});
 
-	// for Debug
-	// $('#input-color-picker').click(function () {
-	// console.log("Clicked!");
-	// });
-	// $('#btn-color-picker').click(function () {
-	// 	console.log("Clicked!");
-	// });
-	// $(document).on('click', '#btn-color-picker', function () {
-	// console.log("Clicked!");
-	// })
+	$("#btn-draw-select").on("click", function () {
+		console.log("isBrushDrawing: " + isBrushDrawing.toString());
+		if (isBrushDrawing) {
+			$("#btn-draw-select").text("Pen");
+		} else {
+			$("#btn-draw-select").text("Brush");
+		}
+		isBrushDrawing = !isBrushDrawing;
+	});
 
-	canvasRetinization();
-	$(window).on("resize", canvasRetinization);
+	$(window).on("resize", function (ev) {
+		htmlCanvasRetinization(canvas, ctx2d);
+	});
+
+	$(".number-spinner button").on("click", function () {
+		var btn = $(this);
+		var oldValue = btn.closest(".number-spinner").find("input").val().trim();
+		var newVal = 0;
+
+		if (btn.attr("data-dir") == "up") {
+			newVal = parseInt(oldValue) + 1;
+		} else {
+			if (oldValue > 1) {
+				newVal = parseInt(oldValue) - 1;
+			} else {
+				newVal = 1;
+			}
+		}
+
+		btn.closest(".number-spinner").find("input").val(newVal);
+	});
+
 });
+
+/* Function Declarations */
+function htmlCanvasRetinization(jqCanvas, canvas2dCtx) {
+	var canvasCssW = parseInt(jqCanvas.css("width"));
+	var canvasCssH = parseInt(jqCanvas.css("height"));
+
+
+	jqCanvas.prop("width", canvasCssW * 2);
+	jqCanvas.prop("height", canvasCssH * 2);
+
+	canvas2dCtx.scale(2, 2);
+}
+
+
+function calcDistance(p0, p1) {
+	return Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2));
+}
+
+function calcAngle(p0, p1) {
+	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
+}
+
+function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth) {
+	var ctx = canvas2dCtx;
+	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
+	var penImg = $("img#img-pen-style")[0];
+
+	var dist = calcDistance(pLast, pCurrent);
+	var angl = calcAngle(pLast, pCurrent);
+
+	console.log(`Dist: ${dist}, Angle: ${angl}`);
+
+	// Set line style
+	if (!flag) {
+		ctx.lineCap = ctx.lineJoin = "round";
+		ctx.strokeStyle = jqColor.val();
+		ctx.lineWidth = parseInt(jqWidth.val());
+	}
+
+
+	for (var i = 0; i < dist; i++) {
+		x = pLast.x + i * Math.cos(angl);
+		y = pLast.y + i * Math.sin(angl);
+
+		if (flag) {
+			// Draw brush
+			ctx.drawImage(penImg, x - 0.5 * penImg.naturalWidth, y - 0.5 * penImg.naturalHeight);
+		} else {
+			// Draw line
+
+			ctx.lineTo(x, y);
+			ctx.stroke();
+		}
+	}
+}
+
+function canvasPush(stack, ctx, LIMIT) {
+	var w = ctx.canvas.width;
+	var h = ctx.canvas.height;
+
+	var imgData = ctx.getImageData(0, 0, w, h);
+
+	if (stack.length == LIMIT) {
+		stack.shift();
+	}
+	stack.push(imgData);
+
+	$("#btn-undo").removeAttr("disabled");
+	$("#btn-undo").text("Undo (" + stack.length + ")");
+
+	return;
+}
+
+function canvasPop(stack, ctx) {
+	var imgData = stack.pop();
+
+	if (stack.length == 0) {
+		$("#btn-undo").attr("disabled", "disabled");
+	}
+
+	if (typeof imgData !== "undefined") {
+		ctx.putImageData(imgData, 0, 0);
+		console.log("Canvas Restored !");
+	} else {
+		console.log("Stack is Empty !");
+	}
+	$("#btn-undo").text("Undo (" + stack.length + ")");
+}
