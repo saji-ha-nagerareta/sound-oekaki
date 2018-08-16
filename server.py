@@ -33,8 +33,8 @@ class PenInfoHandler(tornado.web.RequestHandler):
             print(self.request.path + " Wrong request:No file.")
             raise tornado.web.HTTPError(400)
         else:
-            # 仮実装。self.request.filesのキーは送信側のフィールド名依存
-            file = self.request.files["file"][0]
+            # 仮実装。Ajaxで送られてきていることを想定
+            file = self.request.body
             # Todo:ふるわらがいい感じにしてくれる
             # print(file)
             # 受け取ったファイルのやり取りの仕方は要検討
