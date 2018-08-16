@@ -13,6 +13,8 @@ $("document").ready(function () {
 	var SIZE_UNDO_STACK = 20;
 	var undoStack = new Array();
 
+	var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
+
 
 	/* init: HTML Canvas */
 	htmlCanvasRetinization(canvas, ctx2d);
@@ -29,12 +31,20 @@ $("document").ready(function () {
 			isDrawing = true;
 		},
 		"mouseout": function (ev) {
+			var payload = {
+				"action": 'EOD' // End of Drawing
+			};
 			isDrawing = false;
 			ctx2d.beginPath();
+			ws.send(JSON.stringify(payload));
 		},
 		"mouseup": function (ev) {
+			var payload = {
+				"action": 'EOD' // End of Drawing
+			};
 			isDrawing = false;
 			ctx2d.beginPath();
+			ws.send(JSON.stringify(payload));
 		},
 		"mousemove": function (ev) {
 			if (isDrawing) {
@@ -44,7 +54,7 @@ $("document").ready(function () {
 					isCanvasSaved = true;
 				}
 				// Drawing
-				drawing(isBrushDrawing, ctx2d, ev, pLast, color, width);
+				drawing(isBrushDrawing, ctx2d, ev, pLast, color, width, ws);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		},
@@ -98,6 +108,13 @@ $("document").ready(function () {
 		btn.closest(".number-spinner").find("input").val(newVal);
 	});
 
+	if (!isBrushDrawing){
+		// WebSocket: Message arrived
+		ws.onmessage = function (ev) {
+			syncCanvas(ctx2d, ev);
+		}
+	}
+
 });
 
 /* Function Declarations */
@@ -121,7 +138,7 @@ function calcAngle(p0, p1) {
 	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth) {
+function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth, wSock) {
 	var ctx = canvas2dCtx;
 	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
 	var penImg = $("img#img-pen-style")[0];
@@ -129,7 +146,7 @@ function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth) {
 	var dist = calcDistance(pLast, pCurrent);
 	var angl = calcAngle(pLast, pCurrent);
 
-	console.log(`Dist: ${dist}, Angle: ${angl}`);
+	// console.log(`Dist: ${dist}, Angle: ${angl}`);
 
 	// Set line style
 	if (!flag) {
@@ -150,6 +167,7 @@ function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth) {
 			// Draw line
 
 			ctx.lineTo(x, y);
+			sendCanvasWS(wSock, ctx, x, y);
 			ctx.stroke();
 		}
 	}
@@ -186,4 +204,58 @@ function canvasPop(stack, ctx) {
 		console.log("Stack is Empty !");
 	}
 	$("#btn-undo").text("Undo (" + stack.length + ")");
+}
+
+// Send canvas using WebSocket
+function sendCanvasWS(wSock, canvas2dctx, x, y) {
+	var ws  = wSock, 
+			ctx = canvas2dctx;
+	var payload = {
+		'action': "DRAW",
+		'payload': {
+			'ctx': {
+				'lineCap': ctx.lineCap,
+				'lineJoin': ctx.lineJoin,
+				'strokeStyle': ctx.strokeStyle,
+				'lineWidth': ctx.lineWidth
+			},
+			'pos': {
+				'x': x,
+				'y': y
+			}
+		}
+	};
+
+	ws.send(JSON.stringify(payload));
+}
+
+// Sync Canvas using WebSocket
+function syncCanvas(canvas2dCtx, ev){
+	var data = JSON.parse(ev.data);
+	var ctx = canvas2dCtx;
+
+	console.log(data);
+
+	var action = data.action;
+	var payload = data.payload;
+
+	switch (action) {
+		case "DRAW":
+			ctx.lineCap = payload.ctx.lineCap;
+			ctx.lineJoin = payload.ctx.lineJoin;
+			ctx.strokeStyle = payload.ctx.strokeStyle;
+			ctx.lineWidth = payload.ctx.lineWidth;
+
+			ctx.lineTo(payload.pos.x, payload.pos.y);
+			ctx.stroke();
+			break;
+	
+		case "EOD":
+			ctx.beginPath();
+			break;
+		
+		default:
+			break;
+	}
+
 }

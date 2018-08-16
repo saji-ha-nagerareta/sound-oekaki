@@ -1,3 +1,6 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -94,4 +97,5 @@ def make_app():
 if __name__ == "__main__":
     app = make_app()
     app.listen(8888)
+    print("Server Runnning ! -- http://localhost:8888/")
     tornado.ioloop.IOLoop.current().start()
