@@ -3,6 +3,7 @@ import tornado.web
 import tornado.websocket
 import json
 import os
+import uuid
 
 # 各ルーム接続者
 ws_con = {}
@@ -29,7 +30,21 @@ class PenInfoHandler(tornado.web.RequestHandler):
         self.write("test")
 
     def post(self):
-        pass
+        if not self.request.files:
+            print(self.request.path + " Wrong request:No file.")
+            raise tornado.web.HTTPError(400)
+        else:
+            # 仮実装。Ajaxで送られてきていることを想定
+            file = self.request.body
+            # Todo:ふるわらがいい感じにしてくれる
+            # print(file)
+            # 受け取ったファイルのやり取りの仕方は要検討
+            # self.request.files["file"][0]["filename"]:ファイル名
+            #                               ["body"]:バイナリ
+            #                               ["content_type"]:
+            dump = open("../tmp.wav", 'wb')
+            dump.write(file["body"])
+            self.write(file.filename + "  " + file.content_type)
 
 
 # 描画情報ブロードキャスト
@@ -47,6 +62,10 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         else:
             ws_con[args[0]].append(self)
         print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
+        initMessage = {"action": "ID",
+                       "payload": {"id": uuid.uuid4().hex}
+                       }
+        self.write_message(initMessage)
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
@@ -93,4 +112,5 @@ def make_app():
 if __name__ == "__main__":
     app = make_app()
     app.listen(8888)
+    print("server running")
     tornado.ioloop.IOLoop.current().start()
