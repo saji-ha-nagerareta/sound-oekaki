@@ -42,7 +42,7 @@ class PenInfoHandler(tornado.web.RequestHandler):
             # self.request.files["file"][0]["filename"]:ファイル名
             #                               ["body"]:バイナリ
             #                               ["content_type"]:
-            dump = open("../tmp.wav", 'wb')
+            dump = open("./tmp/"+uuid.uuid4().hex+".webm", 'wb')
             dump.write(file["body"])
             self.write(file.filename + "  " + file.content_type)
 
