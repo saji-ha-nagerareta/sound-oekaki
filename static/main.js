@@ -1,26 +1,40 @@
 /* REQUIRE: jQuery */
 
+/***********************************************/
+/********** VARIABLE DECLARATION ***************/
+/***********************************************/
+var canvas, color, penWidth, brushImg, ctx2d, pLast;
+var wSock, wsId;
+var isDrawing, isBrushDrawing, isCanvasSaved;
+
+var SIZE_UNDO_STACK = 20;
+var undoStack = new Array();
+
+var brushBank = {};
+
+
+
 $("document").ready(function () {
-	var canvas = $("#canvas");
-	var color = $("#input-color-picker");
-	var width = $("#pen-size");
-	var ctx2d = canvas[0].getContext("2d");
-	var pLast = { 'x': 0, 'y': 0 };
+	canvas = $("#canvas");
+	color = $("#input-color-picker");
+	penWidth = $("#pen-size");
+	brushImg = $("img#img-pen-style")[0];
+	ctx2d = canvas[0].getContext("2d");
+	pLast = { 'x': 0, 'y': 0 };
 
-	var isDrawing = false;
-	var isBrushDrawing = false;
-	var isCanvasSaved = false;
-	var SIZE_UNDO_STACK = 20;
-	var undoStack = new Array();
+	isDrawing = false;
+	isBrushDrawing = false;
+	isCanvasSaved = false;
 
-	var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
+	// var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
+	wSock = new WebSocket("ws://172.24.100.7:8888/soundOekaki/default");
+	wsId = -1;
 
 
 	/* init: HTML Canvas */
-	htmlCanvasRetinization(canvas, ctx2d);
+	htmlCanvasRetinization();
 	// set lineWidth
 	ctx2d.lineWidth = 10;
-	// set endpoints
 	ctx2d.lineCap = "round";
 	ctx2d.lineJoin = "bevel";
 
@@ -29,32 +43,40 @@ $("document").ready(function () {
 		"mousedown": function (ev) {
 			isCanvasSaved = false;
 			isDrawing = true;
+			// Send Brush data when isBrushDrawing
+			if (isBrushDrawing) {
+				wSock.send(JSON.stringify({
+					"action": "SEND_BRUSH",
+					"payload": {
+						"id": wsId,
+						"imgData": imgToBase64(brushImg)
+					}
+				}));
+			}
 		},
 		"mouseout": function (ev) {
-			var payload = {
-				"action": 'EOD' // End of Drawing
-			};
 			isDrawing = false;
 			ctx2d.beginPath();
-			ws.send(JSON.stringify(payload));
+			wSock.send(JSON.stringify({
+				"action": 'EOD' // End of Drawing
+			}));
 		},
 		"mouseup": function (ev) {
-			var payload = {
-				"action": 'EOD' // End of Drawing
-			};
 			isDrawing = false;
 			ctx2d.beginPath();
-			ws.send(JSON.stringify(payload));
+			wSock.send(JSON.stringify({
+				"action": 'EOD' // End of Drawing
+			}));
 		},
 		"mousemove": function (ev) {
 			if (isDrawing) {
 				// Save Canvas;
 				if (!isCanvasSaved) {
-					canvasPush(undoStack, ctx2d, SIZE_UNDO_STACK)
+					canvasPush()
 					isCanvasSaved = true;
 				}
 				// Drawing
-				drawing(isBrushDrawing, ctx2d, ev, pLast, color, width, ws);
+				drawing(ev);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		},
@@ -69,7 +91,7 @@ $("document").ready(function () {
 	});
 
 	$("#btn-undo").on("click", function (ev) {
-		canvasPop(undoStack, ctx2d);
+		canvasPop();
 	});
 
 	$("#btn-color-picker").on("click", function () {
@@ -77,7 +99,6 @@ $("document").ready(function () {
 	});
 
 	$("#btn-draw-select").on("click", function () {
-		console.log("isBrushDrawing: " + isBrushDrawing.toString());
 		if (isBrushDrawing) {
 			$("#btn-draw-select").text("Pen");
 		} else {
@@ -87,7 +108,7 @@ $("document").ready(function () {
 	});
 
 	$(window).on("resize", function (ev) {
-		htmlCanvasRetinization(canvas, ctx2d);
+		htmlCanvasRetinization();
 	});
 
 	$(".number-spinner button").on("click", function () {
@@ -108,25 +129,49 @@ $("document").ready(function () {
 		btn.closest(".number-spinner").find("input").val(newVal);
 	});
 
-	if (!isBrushDrawing){
-		// WebSocket: Message arrived
-		ws.onmessage = function (ev) {
-			syncCanvas(ctx2d, ev);
+	// WebSocket: Message arrived
+	wSock.onmessage = function (ev) {
+		var data = JSON.parse(ev.data); 
+		// var data = ev.data;
+		var action = data.action;
+		var payload = data.payload;
+
+		
+		console.log(`WebSocket: Received Message ! (action = ${action})`);
+		switch (action) {
+			case "ID":
+				wsId = payload.id;
+				console.log(`WebSocket: Receive ID ! (id = ${wsId})`)
+				break;
+			
+			case "DRAW":
+				syncCanvas(payload);
+				break;
+
+			case "EOD": // EOD := End Of Drawing
+				ctx2d.beginPath();
+				break;
+			
+			case "SEND_BRUSH":
+				brushBank[payload.id] = base64ToImg(payload.imgData);
+		
+			default:
+				break;
 		}
 	}
 
 });
 
 /* Function Declarations */
-function htmlCanvasRetinization(jqCanvas, canvas2dCtx) {
-	var canvasCssW = parseInt(jqCanvas.css("width"));
-	var canvasCssH = parseInt(jqCanvas.css("height"));
+function htmlCanvasRetinization() {
+	var canvasCssW = parseInt(canvas.css("width"));
+	var canvasCssH = parseInt(canvas.css("height"));
 
 
-	jqCanvas.prop("width", canvasCssW * 2);
-	jqCanvas.prop("height", canvasCssH * 2);
+	canvas.prop("width", canvasCssW * 2);
+	canvas.prop("height", canvasCssH * 2);
 
-	canvas2dCtx.scale(2, 2);
+	ctx2d.scale(2, 2);
 }
 
 
@@ -138,8 +183,7 @@ function calcAngle(p0, p1) {
 	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth, wSock) {
-	var ctx = canvas2dCtx;
+function drawing(evMouse) {
 	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
 	var penImg = $("img#img-pen-style")[0];
 
@@ -149,75 +193,71 @@ function drawing(flag, canvas2dCtx, evMouse, pLast, jqColor, jqWidth, wSock) {
 	// console.log(`Dist: ${dist}, Angle: ${angl}`);
 
 	// Set line style
-	if (!flag) {
-		ctx.lineCap = ctx.lineJoin = "round";
-		ctx.strokeStyle = jqColor.val();
-		ctx.lineWidth = parseInt(jqWidth.val());
+	if (!isBrushDrawing) {
+		ctx2d.lineCap = ctx2d.lineJoin = "round";
+		ctx2d.strokeStyle = color.val();
+		ctx2d.lineWidth = parseInt(penWidth.val());
 	}
-
 
 	for (var i = 0; i < dist; i++) {
 		x = pLast.x + i * Math.cos(angl);
 		y = pLast.y + i * Math.sin(angl);
 
-		if (flag) {
+		if (isBrushDrawing) {
 			// Draw brush
-			ctx.drawImage(penImg, x - 0.5 * penImg.naturalWidth, y - 0.5 * penImg.naturalHeight);
+			ctx2d.drawImage(penImg, x - 0.5 * penImg.naturalWidth, y - 0.5 * penImg.naturalHeight);
 		} else {
 			// Draw line
-
-			ctx.lineTo(x, y);
-			sendCanvasWS(wSock, ctx, x, y);
-			ctx.stroke();
+			ctx2d.lineTo(x, y);
+			ctx2d.stroke();
+			// Send Drawing via WebSocket
 		}
+		sendCanvasWS(x, y);
 	}
 }
 
-function canvasPush(stack, ctx, LIMIT) {
-	var w = ctx.canvas.width;
-	var h = ctx.canvas.height;
+function canvasPush() {
+	var w = ctx2d.canvas.width;
+	var h = ctx2d.canvas.height;
 
-	var imgData = ctx.getImageData(0, 0, w, h);
+	var imgData = ctx2d.getImageData(0, 0, w, h);
 
-	if (stack.length == LIMIT) {
-		stack.shift();
+	if (undoStack.length == SIZE_UNDO_STACK) {
+		undoStack.shift();
 	}
-	stack.push(imgData);
+	undoStack.push(imgData);
 
 	$("#btn-undo").removeAttr("disabled");
-	$("#btn-undo").text("Undo (" + stack.length + ")");
-
-	return;
+	$("#btn-undo").text("Undo (" + undoStack.length + ")");
 }
 
-function canvasPop(stack, ctx) {
-	var imgData = stack.pop();
+function canvasPop() {
+	var imgData = undoStack.pop();
 
-	if (stack.length == 0) {
+	if (undoStack.length == 0) {
 		$("#btn-undo").attr("disabled", "disabled");
 	}
 
 	if (typeof imgData !== "undefined") {
-		ctx.putImageData(imgData, 0, 0);
-		console.log("Canvas Restored !");
+		ctx2d.putImageData(imgData, 0, 0);
 	} else {
 		console.log("Stack is Empty !");
 	}
-	$("#btn-undo").text("Undo (" + stack.length + ")");
+	$("#btn-undo").text("Undo (" + undoStack.length + ")");
 }
 
 // Send canvas using WebSocket
-function sendCanvasWS(wSock, canvas2dctx, x, y) {
-	var ws  = wSock, 
-			ctx = canvas2dctx;
+function sendCanvasWS(x, y) {
 	var payload = {
 		'action': "DRAW",
 		'payload': {
+			'id': wsId,
+			'type': (isBrushDrawing) ? 'brush' : 'pen',
 			'ctx': {
-				'lineCap': ctx.lineCap,
-				'lineJoin': ctx.lineJoin,
-				'strokeStyle': ctx.strokeStyle,
-				'lineWidth': ctx.lineWidth
+				'lineCap': ctx2d.lineCap,
+				'lineJoin': ctx2d.lineJoin,
+				'strokeStyle': ctx2d.strokeStyle,
+				'lineWidth': ctx2d.lineWidth
 			},
 			'pos': {
 				'x': x,
@@ -226,36 +266,54 @@ function sendCanvasWS(wSock, canvas2dctx, x, y) {
 		}
 	};
 
-	ws.send(JSON.stringify(payload));
+	wSock.send(JSON.stringify(payload));
 }
 
 // Sync Canvas using WebSocket
-function syncCanvas(canvas2dCtx, ev){
-	var data = JSON.parse(ev.data);
-	var ctx = canvas2dCtx;
-
-	console.log(data);
-
-	var action = data.action;
-	var payload = data.payload;
-
-	switch (action) {
-		case "DRAW":
-			ctx.lineCap = payload.ctx.lineCap;
-			ctx.lineJoin = payload.ctx.lineJoin;
-			ctx.strokeStyle = payload.ctx.strokeStyle;
-			ctx.lineWidth = payload.ctx.lineWidth;
-
-			ctx.lineTo(payload.pos.x, payload.pos.y);
-			ctx.stroke();
-			break;
+function syncCanvas(payload){
 	
-		case "EOD":
-			ctx.beginPath();
-			break;
-		
-		default:
-			break;
-	}
+	if (payload.type === "brush") {
+		var penImg = brushBank[payload.id];
 
+		if (typeof penImg === "undefined") {
+			console.log("Error!: Brush not found");
+		} else {
+			// Draw brush
+			ctx2d.drawImage(penImg, payload.pos.x - 0.5 * penImg.naturalWidth, payload.pos.y - 0.5 * penImg.naturalHeight);
+		}
+
+	} else {
+		// Set line style
+		ctx2d.lineCap = payload.ctx.lineCap;
+		ctx2d.lineJoin = payload.ctx.lineJoin;
+		ctx2d.strokeStyle = payload.ctx.strokeStyle;
+		ctx2d.lineWidth = payload.ctx.lineWidth;
+
+		// Draw line
+		ctx2d.lineTo(payload.pos.x, payload.pos.y);
+		ctx2d.stroke();
+	}
+}
+
+
+function imgToBase64 (htmlImageElement) {
+	// REF: https://qiita.com/yasumodev/items/e1708f01ff87692185cd
+	var htmlCanvas = document.createElement('canvas');
+
+
+	htmlCanvas.width = htmlImageElement.width;
+	htmlCanvas.height = htmlImageElement.height;
+	htmlCanvas.getContext('2d').drawImage(htmlImageElement, 0, 0);
+
+	return htmlCanvas.toDataURL('image/png');
+}
+
+function base64ToImg (strBase64) {
+	// REF: https://qiita.com/yasumodev/items/e1708f01ff87692185cd
+	var img = new Image();
+	img.src = strBase64;
+	// Debug
+	$("#label-brush-img").text("RECEIVED!!");
+	$("#brush-img")[0].src = strBase64;
+	return img;
 }
