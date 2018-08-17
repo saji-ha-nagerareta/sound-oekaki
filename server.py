@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -22,7 +19,7 @@ def getRoomList():
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         arg = self.request.arguments
-        self.render('index.html')
+        self.render('main.html')
         print(arg)
 
 
@@ -32,7 +29,21 @@ class PenInfoHandler(tornado.web.RequestHandler):
         self.write("test")
 
     def post(self):
-        pass
+        if not self.request.files:
+            print(self.request.path + " Wrong request:No file.")
+            raise tornado.web.HTTPError(400)
+        else:
+            # 仮実装。Ajaxで送られてきていることを想定
+            file = self.request.body
+            # Todo:ふるわらがいい感じにしてくれる
+            # print(file)
+            # 受け取ったファイルのやり取りの仕方は要検討
+            # self.request.files["file"][0]["filename"]:ファイル名
+            #                               ["body"]:バイナリ
+            #                               ["content_type"]:
+            dump = open("../tmp.wav",'wb')
+            dump.write(file["body"])
+            self.write(file.filename+"  "+file.content_type)
 
 
 # 描画情報ブロードキャスト
@@ -89,13 +100,13 @@ def make_app():
         (r'/room', RoomHandler),
         (r'/test/(.*)', test)
     ],
-        template_path=os.path.join(BASE_DIR, "templates"),
-        static_path= os.path.join(BASE_DIR, "static")
+        template_path=os.path.join(BASE_DIR, "templates")
     )
 
 
 if __name__ == "__main__":
     app = make_app()
     app.listen(8888)
-    print("Server Runnning ! -- http://localhost:8888/")
+    print("server running")
     tornado.ioloop.IOLoop.current().start()
+
