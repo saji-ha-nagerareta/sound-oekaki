@@ -27,7 +27,7 @@ $("document").ready(function () {
 	isCanvasSaved = false;
 
 	// var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
-	wSock = new WebSocket("ws://172.24.100.7:8888/soundOekaki/default");
+	wSock = new WebSocket("ws://localhost:8888/soundOekaki/default");
 	wsId = -1;
 
 
