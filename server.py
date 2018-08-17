@@ -3,6 +3,7 @@ import tornado.web
 import tornado.websocket
 import json
 import os
+import uuid
 
 # 各ルーム接続者
 ws_con = {}
@@ -41,9 +42,9 @@ class PenInfoHandler(tornado.web.RequestHandler):
             # self.request.files["file"][0]["filename"]:ファイル名
             #                               ["body"]:バイナリ
             #                               ["content_type"]:
-            dump = open("../tmp.wav",'wb')
+            dump = open("../tmp.wav", 'wb')
             dump.write(file["body"])
-            self.write(file.filename+"  "+file.content_type)
+            self.write(file.filename + "  " + file.content_type)
 
 
 # 描画情報ブロードキャスト
@@ -61,6 +62,10 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         else:
             ws_con[args[0]].append(self)
         print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
+        initMessage = {"action": "ID",
+                       "payload": {"id": uuid.uuid4().hex}
+                       }
+        self.write_message(initMessage)
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
@@ -109,4 +114,3 @@ if __name__ == "__main__":
     app.listen(8888)
     print("server running")
     tornado.ioloop.IOLoop.current().start()
-
