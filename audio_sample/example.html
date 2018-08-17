@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+    <!-- <div id="area">
+    </div> -->
+
+    <canvas id="area" width="1024" height="256">
+    </canvas>
+    <div id ="volume">
+    </div>
+
+    <script src="./audioManager.min.js"></script>
+    <script>
+        var manager;
+
+        window.onload = function draw() {
+            manager = (new AudioManager({
+                useMicrophone: true,
+                onEnterFrame: function () {
+                    var d = this.analysers.mic.getByteFrequencyData();
+                    var canvas = document.getElementById('area');
+                    var ctx = canvas.getContext('2d');
+                    ctx.clearRect(0,0,1024,256);
+                    ctx.fillStyle = '#000';
+                    var a = 0;
+                    for (var i = 0; i < d.length; i++) {
+                        ctx.fillRect(i, 0, 1, d[i]);
+                        a += d[i];
+                    }
+                    document.getElementById('volume').innerHTML = a/100;
+                }
+            })).init();
+        };
+    </script>
+</body>
+
+</html>
