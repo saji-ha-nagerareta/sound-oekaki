@@ -11,3 +11,20 @@ sound-oekaki は 音で絵を書く、新しいスタイルのペインティン
 
 ## Authors
 匙は投げられた＋α @ Hack U 2018 Nagoya
+
+
+## Setup
+
+### Setup Server
+
+1. Python 3.x のインストール
+
+1. `tornado`パッケージのインストール
+```bash
+> pip3 install torando
+```
+
+1. サーバーの起動
+```bash
+> python3 server.py
+```
