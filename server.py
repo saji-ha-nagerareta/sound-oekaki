@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import json
 import os
+import uuid
 
 # 各ルーム接続者
 ws_con = {}
@@ -22,7 +20,7 @@ def getRoomList():
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         arg = self.request.arguments
-        self.render('main.html')
+        self.render('index.html')
         print(arg)
 
 
@@ -44,9 +42,9 @@ class PenInfoHandler(tornado.web.RequestHandler):
             # self.request.files["file"][0]["filename"]:ファイル名
             #                               ["body"]:バイナリ
             #                               ["content_type"]:
-            dump = open("../tmp.wav",'wb')
+            dump = open("./tmp/"+uuid.uuid4().hex+".webm", 'wb')
             dump.write(file["body"])
-            self.write(file.filename+"  "+file.content_type)
+            self.write(file.filename + "  " + file.content_type)
 
 
 # 描画情報ブロードキャスト
@@ -64,6 +62,10 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         else:
             ws_con[args[0]].append(self)
         print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
+        initMessage = {"action": "ID",
+                       "payload": {"id": uuid.uuid4().hex}
+                       }
+        self.write_message(initMessage)
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
@@ -103,7 +105,8 @@ def make_app():
         (r'/room', RoomHandler),
         (r'/test/(.*)', test)
     ],
-        template_path=os.path.join(BASE_DIR, "templates")
+        template_path=os.path.join(BASE_DIR, "templates"),
+        static_path=os.path.join(BASE_DIR, "static")
     )
 
 
