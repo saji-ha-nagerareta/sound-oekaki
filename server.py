@@ -4,6 +4,8 @@ import tornado.websocket
 import json
 import os
 import uuid
+import cv2
+import base64
 
 # 各ルーム接続者
 ws_con = {}
@@ -27,7 +29,11 @@ class MainHandler(tornado.web.RequestHandler):
 # ペン情報取得
 class PenInfoHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("test")
+        img = cv2.imread("./static/brush2.png", cv2.IMREAD_UNCHANGED)
+       # cv2.imshow("test",img)
+        #cv2.waitKey(0)
+        result, img_png = cv2.imencode(".png", img)
+        self.write({"data":base64.b64encode(img_png).decode('utf-8')})
 
     def post(self):
         if not self.request.files:
@@ -42,9 +48,18 @@ class PenInfoHandler(tornado.web.RequestHandler):
             # self.request.files["file"][0]["filename"]:ファイル名
             #                               ["body"]:バイナリ
             #                               ["content_type"]:
-            dump = open("./tmp/"+uuid.uuid4().hex+".webm", 'wb')
+            dumppath = "./tmp/"+uuid.uuid4().hex+".webm"
+            dump = open(dumppath, 'wb')
             dump.write(file["body"])
-            self.write(file.filename + "  " + file.content_type)
+            # sound2pen
+
+            # for test
+            img = cv2.imread("./static/brush3.png", cv2.IMREAD_UNCHANGED)
+            # cv2.imshow("test",img)
+            # cv2.waitKey(0)
+            result, img_png = cv2.imencode(".png", img)
+            self.write({"data": base64.b64encode(img_png).decode('utf-8')})
+
 
 
 # 描画情報ブロードキャスト
