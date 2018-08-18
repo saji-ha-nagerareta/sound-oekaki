@@ -26,8 +26,7 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	// var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
-	wSock = new WebSocket("ws://172.24.100.7:8888/soundOekaki/default");
+	wSock = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
 	wsId = -1;
 
 
@@ -209,11 +208,11 @@ function drawing(evMouse) {
 		} else {
 			// Draw line
 			ctx2d.lineTo(x, y);
-			ctx2d.stroke();
 			// Send Drawing via WebSocket
 		}
 		sendCanvasWS(x, y);
 	}
+	ctx2d.stroke();
 }
 
 function canvasPush() {
