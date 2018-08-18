@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Page Title</title>
-  <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css" />
+  <link rel="stylesheet" type="text/css" media="screen" href="{{static_url("main.css")}}" />
   <!-- jQuery -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
   <!-- Material Design for Bootstrap -->
@@ -84,7 +84,7 @@
     </div>
 
 
-    <img src="../static/Brush2.png" alt="pen.png" id="img-pen-style" style="display: none">
+    <img src="{{static_url("Brush2.png")}}" alt="pen.png" id="img-pen-style" style="display: none">
     <br>
     <div>
       <p id="label-brush-img">not Received: </p>
@@ -93,6 +93,6 @@
   </div>
 
 </body>
-<script src="../static/main.js"></script>
+<script src="{{static_url("main.js")}}"></script>
 
 </html>

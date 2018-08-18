@@ -3,6 +3,9 @@ import tornado.web
 import tornado.websocket
 import json
 import os
+import uuid
+import cv2
+import base64
 
 # 各ルーム接続者
 ws_con = {}
@@ -19,14 +22,18 @@ def getRoomList():
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         arg = self.request.arguments
-        self.render('main.html')
+        self.render('index.html')
         print(arg)
 
 
 # ペン情報取得
 class PenInfoHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("test")
+        img = cv2.imread("./static/brush2.png", cv2.IMREAD_UNCHANGED)
+       # cv2.imshow("test",img)
+        #cv2.waitKey(0)
+        result, img_png = cv2.imencode(".png", img)
+        self.write({"data":base64.b64encode(img_png).decode('utf-8')})
 
     def post(self):
         if not self.request.files:
@@ -41,9 +48,18 @@ class PenInfoHandler(tornado.web.RequestHandler):
             # self.request.files["file"][0]["filename"]:ファイル名
             #                               ["body"]:バイナリ
             #                               ["content_type"]:
-            dump = open("../tmp.wav",'wb')
+            dumppath = "./tmp/"+uuid.uuid4().hex+".webm"
+            dump = open(dumppath, 'wb')
             dump.write(file["body"])
-            self.write(file.filename+"  "+file.content_type)
+            # sound2pen
+
+            # for test
+            img = cv2.imread("./static/brush3.png", cv2.IMREAD_UNCHANGED)
+            # cv2.imshow("test",img)
+            # cv2.waitKey(0)
+            result, img_png = cv2.imencode(".png", img)
+            self.write({"data": base64.b64encode(img_png).decode('utf-8')})
+
 
 
 # 描画情報ブロードキャスト
@@ -61,6 +77,10 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         else:
             ws_con[args[0]].append(self)
         print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
+        initMessage = {"action": "ID",
+                       "payload": {"id": uuid.uuid4().hex}
+                       }
+        self.write_message(initMessage)
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
@@ -100,7 +120,8 @@ def make_app():
         (r'/room', RoomHandler),
         (r'/test/(.*)', test)
     ],
-        template_path=os.path.join(BASE_DIR, "templates")
+        template_path=os.path.join(BASE_DIR, "templates"),
+        static_path=os.path.join(BASE_DIR, "static")
     )
 
 
@@ -109,4 +130,3 @@ if __name__ == "__main__":
     app.listen(8888)
     print("server running")
     tornado.ioloop.IOLoop.current().start()
-
