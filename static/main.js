@@ -55,14 +55,14 @@ $("document").ready(function () {
 		},
 		"mouseout": function (ev) {
 			isDrawing = false;
-			ctx2d.beginPath();
+			// ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
 		},
 		"mouseup": function (ev) {
 			isDrawing = false;
-			ctx2d.beginPath();
+			// ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
@@ -86,7 +86,7 @@ $("document").ready(function () {
 
 	$("#btn-clear-canvas").on("click", function (ev) {
 		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
-		ctx2d.beginPath();
+		// ctx2d.beginPath();
 	});
 
 	$("#btn-undo").on("click", function (ev) {
@@ -148,7 +148,7 @@ $("document").ready(function () {
 				break;
 
 			case "EOD": // EOD := End Of Drawing
-				ctx2d.beginPath();
+				// ctx2d.beginPath();
 				break;
 			
 			case "SEND_BRUSH":
@@ -190,6 +190,8 @@ function drawing(evMouse) {
 	var angl = calcAngle(pLast, pCurrent);
 
 	// console.log(`Dist: ${dist}, Angle: ${angl}`);
+
+	ctx2d.beginPath();
 
 	// Set line style
 	if (!isBrushDrawing) {
@@ -270,6 +272,8 @@ function sendCanvasWS(x, y) {
 
 // Sync Canvas using WebSocket
 function syncCanvas(payload){
+
+	ctx2d.beginPath();
 	
 	if (payload.type === "brush") {
 		var penImg = brushBank[payload.id];
