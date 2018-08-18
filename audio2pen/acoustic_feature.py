@@ -3,8 +3,7 @@
 import numpy as np
 import wave
 import ffmpeg
-from audio2pen import fft
-
+import fft
 
 def _db(wav):
     db = wav ** 2.0
@@ -76,4 +75,9 @@ if __name__ == '__main__':
     # print(_sound_section(audio))
     # print(_spectrum(wav, audio.framerate))
 
-    extract('c.webm')
+    result = extract('c.webm')
+    print(result)
+    
+    f = open("feature.txt", "wt")
+    f.write(str(result))
+    f.close()
