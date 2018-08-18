@@ -26,7 +26,8 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	wSock = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
+	
+	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
 
@@ -55,14 +56,12 @@ $("document").ready(function () {
 		},
 		"mouseout": function (ev) {
 			isDrawing = false;
-			// ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
 		},
 		"mouseup": function (ev) {
 			isDrawing = false;
-			// ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
@@ -86,7 +85,6 @@ $("document").ready(function () {
 
 	$("#btn-clear-canvas").on("click", function (ev) {
 		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
-		// ctx2d.beginPath();
 	});
 
 	$("#btn-undo").on("click", function (ev) {
@@ -148,7 +146,6 @@ $("document").ready(function () {
 				break;
 
 			case "EOD": // EOD := End Of Drawing
-				// ctx2d.beginPath();
 				break;
 			
 			case "SEND_BRUSH":
