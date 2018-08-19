@@ -3,6 +3,9 @@
 import numpy as np
 import wave
 import ffmpeg
+import librosa
+import subprocess
+
 from audio2pen import fft
 
 
@@ -34,6 +37,48 @@ def _spectrum(wav, sample_rate):
     return power_spec, freq, pitch
 
 
+def _fbank(wav, sample_rate, nfilt=26, high_freq=None, type='mono'):
+    frame_len_ms = 100
+    frame_step_ms = 50
+    frame_len = frame_len_ms * sample_rate // 1000
+    frame_step = frame_step_ms * sample_rate // 1000
+
+    magnitude_spec,_,freq = fft.fbank(wav, samplerate=sample_rate, frame_len=frame_len, frame_step=frame_step,
+                                      nfilt=nfilt, highfreq=high_freq, type=type)
+    power_spec = np.square(magnitude_spec)
+    power_spec = np.where(power_spec == 0, np.finfo(float).eps, power_spec)
+    power_spec = np.log10(power_spec)
+
+    power_spec = np.mean(power_spec, axis=0)
+
+    return power_spec, freq
+
+
+def _pitch(wav, sample_rate):
+    pitches, mags = librosa.piptrack(y=wav, sr=sample_rate, n_fft=1024, fmin=0)
+    pitches = pitches[mags > np.median(mags)]
+    mags = mags[mags > np.median(mags)]
+    print(np.sort(pitches))
+    print(mags[np.argsort(pitches)])
+
+    print(pitches[np.argsort(mags)])
+    print(np.sort(mags))
+
+    print(pitches.shape, np.max(pitches), np.min(pitches), np.median(pitches))
+    return pitches
+
+#
+# def _pitch_reaper(wav_path):
+#     pitch_path = wav_path.replace('.webm', '.wav')
+#     cmd = ['reaper', '-i', wav_path, '-f', pitch_path, '-a']
+#     subprocess.run(cmd)
+#
+#     with open(pitch_path, 'r') as file:
+#         line = file.readlines()
+#         for l in line[7:]:
+#             l.split(' ')
+
+
 def _read_wave(path):
     with wave.open(str(path), mode='rb') as wif:
         # params = (nchannels, sampwidth, framerate, nframes, comptype, compname)
@@ -60,20 +105,17 @@ def extract(webm_path):
     feat['db'] = _db(wav)
     feat['power_spec'], feat['freq'], feat['pitch'] = _spectrum(wav, fr)
 
+    nfilt = 16
+    high_freq = 8000
+    filter_type = 'mel'
+    feat['fbank_spec'], feat['fbank_freq'] = _fbank(wav, sample_rate=fr, nfilt=nfilt, high_freq=high_freq, type=filter_type)
+
+    wav, fr = librosa.load(wav_path)
+    _pitch(wav, fr)
+
     return feat
 
 
 if __name__ == '__main__':
-    # stream = ffmpeg.input('big-buck-bunny_trailer.webm')
-    # stream = ffmpeg.output(stream, 'big-buck-bunny_trailer.wav')
-    # ffmpeg.run(stream)
-
-    # audio = sonar.io.audio.read('big-buck-bunny_trailer.wav')
-    # audio = sonar.io.audio.read('c.wav')
-    # wav = audio[0]
-    # print(_db(wav))
-    # print("def", audio.rms_dbfs)
-    # print(_sound_section(audio))
-    # print(_spectrum(wav, audio.framerate))
-
-    extract('c.webm')
+    print(extract('c.webm'))
+    # _pitch_reaper('c.wav')
