@@ -8,6 +8,7 @@ import subprocess
 import os
 
 import fft
+import vad
 
 
 def _db(wav):
@@ -89,6 +90,31 @@ def _pitch_reaper(wav_path):
     return pitche
 
 
+def _sound_section(wav, sample_rate):
+    frame_len_ms = 40
+    frame_step_ms = 20
+    frame_len = frame_len_ms * sample_rate // 1000
+    frame_step = frame_step_ms * sample_rate // 1000
+    th = None
+
+    label = vad.power(wav, frame_len=frame_len, frame_step=frame_step, th=th)
+    _write_label(label, sample_rate)
+
+    sect = []
+    for l in label:
+        sect.append(l['end'] - l['start'])
+
+    return sect
+
+
+def _write_label(label, sample_rate):
+    with open('label.txt', "w") as f:
+        for item in label:
+            start = item['start'] / sample_rate
+            end = item['end'] / sample_rate
+            f.write(f"{start:.6f}\t{end:.6f}\tsound\n")
+
+
 def _read_wave(path):
     with wave.open(str(path), mode='rb') as wif:
         # params = (nchannels, sampwidth, framerate, nframes, comptype, compname)
@@ -104,11 +130,11 @@ def _read_wave(path):
 
 def extract(webm_path):
     wav_path = webm_path.replace('.webm', '.wav')
-    
+
     stream = ffmpeg.input(webm_path)
     stream = ffmpeg.output(stream, wav_path, acodec='pcm_s16le', ac=1)
     stream = ffmpeg.overwrite_output(stream)
-    ffmpeg.run(stream, capture_stderr=True)
+    ffmpeg.run(stream, capture_stderr=False)
 
     wav, fr = _read_wave(wav_path)
     wav = wav[0]
@@ -120,12 +146,14 @@ def extract(webm_path):
     feat['time_ms'] = wav.size * 1000 // fr
 
     feat['db'] = _db(wav)
+    feat['sound_sect'] = _sound_section(wav, fr)
     feat['power_spec'], feat['freq'], feat['pitch'] = _spectrum(wav, fr)
 
     nfilt = 16
     high_freq = 8000
     filter_type = 'mel'
-    feat['fbank_spec'], feat['fbank_freq'] = _fbank(wav, sample_rate=fr, nfilt=nfilt, high_freq=high_freq, type=filter_type)
+    feat['fbank_spec'], feat['fbank_freq'] = _fbank(wav, sample_rate=fr, nfilt=nfilt,
+                                                    high_freq=high_freq, type=filter_type)
 
     feat['pitch_reaper'] = _pitch_reaper(wav_path)
 
@@ -136,4 +164,4 @@ def extract(webm_path):
 
 
 if __name__ == '__main__':
-    print(extract('se_maoudamashii_battle18.wav'))
+    print(extract('c2.webm'))

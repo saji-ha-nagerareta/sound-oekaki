@@ -1,33 +1,88 @@
-import sonar
+import numpy as np
+import fft
 
-def _sound_section(audio):
-    # VADに関する設定
-    window_ms = 40
-    hop_ms = 20
-    lowcut = 250
-    highcut = 5000
-    th = None
 
-    # VAD平滑化後処理に関する設定
-    pause_ms = 500
-    minlen_ms = 200
+def _activity_detect(data, th):
+    label = []
+    act_frames = np.where(data > th)[0]
+    if len(act_frames) > 0:
+        start = act_frames[0]
+        for i in range(1,len(act_frames)):
+            if (act_frames[i] - act_frames[i-1]) > 1:
+                label.append({'start': start, 'end': act_frames[i-1]})
+                start = act_frames[i]
+        label.append({'start': start, 'end': act_frames[-1]})
 
-    # パワーベースのVADを実行する。window_ms, hop_msは窓幅とシフト幅。基本的に調整不要。
-    # 閾値は自動的に決定されるが、自分で決めたいときは0.0~1.0の間で入力する。
-    print('Run power based VAD.')
-    est_label = sonar.vad.power(audio.mixdown(), window_ms=window_ms, hop_ms=hop_ms,
-                                use_pre_emphasis=False, use_bandpass=False, lowcut=lowcut, highcut=highcut, th=th)
+    return label
 
-    # 推定した発話区間の平滑化を行う。
-    # 検出した発話区間同士の間がpause_msの値以下の場合は発話区間を結合する。単位はms。
-    # 発話区間の長さがminlen_msに達しない場合は削除する。単位はms。
-    est_label = sonar.vad.post_filter(est_label, pause_ms=pause_ms, minlen_ms=minlen_ms)
 
-    est_label = est_label.astype('ms')
-    audio_ms = audio.nframes * 1000 // audio.framerate
-    ss_ms = 0
-    for label in est_label:
-        ss_ms += label['end'] - label['start']
+def _get_hist(data, resolution=100):
+    hist = np.zeros((resolution,), dtype=np.int)
+    datamax = data.max()
+    unit = datamax / resolution
+    for i in range(resolution):
+        hist[i] = len(np.where((data >= i * unit) & (data < (i + 1) * unit))[0])
 
-    rate = ss_ms / audio_ms
-    return rate, ss_ms
+    return hist
+
+
+def _get_threshold(data, low=0.0, high=1.0):
+    hist_num = _get_hist(data, resolution=500)
+    hist_val = np.arange(hist_num.size) * hist_num
+
+    separation = np.zeros(hist_num.size)
+    for t in range(1 + int(hist_num.size * low), int(hist_num.size * high)):
+        num1 = np.sum(hist_num[:t])
+        ave1 = np.average(hist_val[:t])
+        num2 = np.sum(hist_num[t:])
+        ave2 = np.average(hist_val[t:])
+        r = num1 * num2 * np.square(ave1 - ave2) / np.square(num1 + num2)
+
+        separation[t] = r
+    th = separation.argmax()
+
+    th /= hist_num.size
+    return th
+
+
+def _normalization(data):
+    data -= data.min()
+    hist_num = _get_hist(data)
+    max_num = np.where(hist_num > sum(hist_num) / 1000)[0][-1] / 100 * data.max()
+    data /= max_num
+    data[data > 1.0] = 1.0
+
+    return data
+
+
+# def _db(data):
+#     db = np.abs(data)
+#     db = 20 * np.log10(np.maximum(db, np.finfo(np.float).eps) / np.iinfo(np.int16).max)
+#     return db
+
+def _db(data):
+    data = np.abs(data)
+    positive = np.where(data > 0)
+    data = data.astype(np.float)
+    data[positive] = np.log10(data[positive])
+    data *= 20
+
+    return data
+
+
+def power(wav, frame_len, frame_step, th=None):
+    # data = np.abs(wav).astype(np.float)
+    data = _db(wav)
+
+    data = np.average(fft.framesig(data, frame_len, frame_step), axis=1)
+    data = _normalization(data)
+
+    if th is None:
+        th = _get_threshold(data)
+
+    label = _activity_detect(data, th)
+    for l in label:
+        l['start'] = l['start']*frame_step
+        l['end'] = l['end']*frame_step + frame_len
+
+    return label
