@@ -83,16 +83,16 @@ def istft(magnitude_spec, phase_spec, frame_len, frame_step, siglen=None, winfun
 
 
 def fbank(signal, samplerate=16000, frame_len=400, frame_step=160, nfilt=26,
-          lowfreq=0, highfreq=None, winfunc=np.hamming):
+          lowfreq=0, highfreq=None, winfunc=np.hamming, type='mono'):
     highfreq = highfreq or samplerate / 2
 
     magnitude_spec, phase_spec = stft(signal, frame_len, frame_step, nfft=None, winfunc=winfunc)
 
-    fb = _get_filterbanks(nfilt, frame_len, samplerate, lowfreq, highfreq)
+    fb, bin = _get_filterbanks(nfilt, frame_len, samplerate, lowfreq, highfreq, type)
     feat = np.dot(magnitude_spec, fb.T)  # compute the filterbank energies
     feat = np.where(feat == 0, np.finfo(float).eps, feat)  # if feat is zero, we get problems with log
 
-    return feat, phase_spec
+    return feat, phase_spec, bin
 
 
 def ifbank(feat, phase_spec, samplerate=16000, frame_len=400, frame_step=160, nfilt=26,
@@ -113,19 +113,22 @@ def _mel2hz(mel):
     return 700 * (10 ** (mel / 2595) - 1)
 
 
-def _get_filterbanks(nfilt=20, nfft=512, samplerate=16000, lowfreq=0, highfreq=None):
+def _get_filterbanks(nfilt=20, nfft=512, samplerate=16000, lowfreq=0, highfreq=None, type='mono'):
     if highfreq is None:
         highfreq = samplerate / 2
     assert highfreq <= samplerate / 2, "highfreq is greater than samplerate/2"
 
-    # compute points evenly spaced in mels
-    # lowmel = _hz2mel(lowfreq)
-    # highmel = _hz2mel(highfreq)
-    # melpoints = np.linspace(lowmel, highmel, nfilt + 2)
-    # our points are in Hz, but we use fft bins, so we have to convert
-    #  from Hz to fft bin number
-    # bin = np.floor((nfft + 1) * _mel2hz(melpoints) / samplerate)
-    bin = np.floor((nfft + 1) * np.linspace(lowfreq, highfreq, nfilt + 2) / samplerate)
+    if type == 'mono':
+        fpoint = np.linspace(lowfreq, highfreq, nfilt + 2)
+    elif type == 'mel':
+        # compute points evenly spaced in mels
+        lowmel = _hz2mel(lowfreq)
+        highmel = _hz2mel(highfreq)
+        melpoints = np.linspace(lowmel, highmel, nfilt + 2)
+        fpoint = _mel2hz(melpoints)
+        # our points are in Hz, but we use fft bins, so we have to convert
+        #  from Hz to fft bin number
+    bin = np.floor((nfft + 1) * fpoint / samplerate)
 
     fbank = np.zeros((nfilt, nfft // 2 + 1))
     for j in range(0, nfilt):
@@ -134,7 +137,7 @@ def _get_filterbanks(nfilt=20, nfft=512, samplerate=16000, lowfreq=0, highfreq=N
         for i in range(int(bin[j + 1]), int(bin[j + 2])):
             fbank[j, i] = (bin[j + 2] - i) / (bin[j + 2] - bin[j + 1])
 
-    return fbank
+    return fbank, fpoint[1:-1]
 
 
 def _get_ifilterbanks(nfilt=20, nfft=512, samplerate=16000, lowfreq=0, highfreq=None):

@@ -26,8 +26,8 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	// var ws = new WebSocket("ws://localhost:8888/soundOekaki/room1234");
-	wSock = new WebSocket("ws://localhost:8888/soundOekaki/default");
+	
+	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
 
@@ -56,14 +56,12 @@ $("document").ready(function () {
 		},
 		"mouseout": function (ev) {
 			isDrawing = false;
-			ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
 		},
 		"mouseup": function (ev) {
 			isDrawing = false;
-			ctx2d.beginPath();
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
@@ -87,7 +85,6 @@ $("document").ready(function () {
 
 	$("#btn-clear-canvas").on("click", function (ev) {
 		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
-		ctx2d.beginPath();
 	});
 
 	$("#btn-undo").on("click", function (ev) {
@@ -149,7 +146,6 @@ $("document").ready(function () {
 				break;
 
 			case "EOD": // EOD := End Of Drawing
-				ctx2d.beginPath();
 				break;
 			
 			case "SEND_BRUSH":
@@ -192,6 +188,8 @@ function drawing(evMouse) {
 
 	// console.log(`Dist: ${dist}, Angle: ${angl}`);
 
+	ctx2d.beginPath();
+
 	// Set line style
 	if (!isBrushDrawing) {
 		ctx2d.lineCap = ctx2d.lineJoin = "round";
@@ -209,11 +207,11 @@ function drawing(evMouse) {
 		} else {
 			// Draw line
 			ctx2d.lineTo(x, y);
-			ctx2d.stroke();
 			// Send Drawing via WebSocket
 		}
 		sendCanvasWS(x, y);
 	}
+	ctx2d.stroke();
 }
 
 function canvasPush() {
@@ -271,6 +269,8 @@ function sendCanvasWS(x, y) {
 
 // Sync Canvas using WebSocket
 function syncCanvas(payload){
+
+	ctx2d.beginPath();
 	
 	if (payload.type === "brush") {
 		var penImg = brushBank[payload.id];
