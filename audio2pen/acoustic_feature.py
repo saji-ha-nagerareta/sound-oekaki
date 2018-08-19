@@ -67,16 +67,22 @@ def _pitch(wav, sample_rate):
     print(pitches.shape, np.max(pitches), np.min(pitches), np.median(pitches))
     return pitches
 
-#
-# def _pitch_reaper(wav_path):
-#     pitch_path = wav_path.replace('.webm', '.wav')
-#     cmd = ['reaper', '-i', wav_path, '-f', pitch_path, '-a']
-#     subprocess.run(cmd)
-#
-#     with open(pitch_path, 'r') as file:
-#         line = file.readlines()
-#         for l in line[7:]:
-#             l.split(' ')
+
+def _pitch_reaper(wav_path):
+    pitch_path = wav_path.replace('.webm', '.wav')
+    cmd = ['reaper', '-i', wav_path, '-f', pitch_path, '-a']
+    subprocess.run(cmd)
+
+    pitches =[]
+    with open(pitch_path, 'r') as file:
+        line = file.readlines()
+        for l in line[7:]:
+            l = l.strip()
+            pitches.append(np.float(l.split(' ')[2]))
+    pitches = np.array(pitches)
+    pitches = pitches[pitches > 0]
+    pitche = np.mean(pitches)
+    return pitche
 
 
 def _read_wave(path):
@@ -110,12 +116,10 @@ def extract(webm_path):
     filter_type = 'mel'
     feat['fbank_spec'], feat['fbank_freq'] = _fbank(wav, sample_rate=fr, nfilt=nfilt, high_freq=high_freq, type=filter_type)
 
-    wav, fr = librosa.load(wav_path)
-    _pitch(wav, fr)
+    feat['pitch_reaper'] = _pitch_reaper(wav_path)
 
     return feat
 
 
 if __name__ == '__main__':
-    print(extract('c.webm'))
-    # _pitch_reaper('c.wav')
+    print(extract('c2.webm'))

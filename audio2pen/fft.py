@@ -118,8 +118,6 @@ def _get_filterbanks(nfilt=20, nfft=512, samplerate=16000, lowfreq=0, highfreq=N
         highfreq = samplerate / 2
     assert highfreq <= samplerate / 2, "highfreq is greater than samplerate/2"
 
-    print(highfreq, samplerate)
-
     if type == 'mono':
         fpoint = np.linspace(lowfreq, highfreq, nfilt + 2)
     elif type == 'mel':
