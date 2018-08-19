@@ -5,6 +5,7 @@ import wave
 import ffmpeg
 import librosa
 import subprocess
+import os
 
 from audio2pen import fft
 
@@ -100,14 +101,21 @@ def _read_wave(path):
 
 def extract(webm_path):
     wav_path = webm_path.replace('.webm', '.wav')
+    if os.path.exists(wav_path):
+        os.remove(wav_path)
     stream = ffmpeg.input(webm_path)
-    stream = ffmpeg.output(stream, wav_path)
+    stream = ffmpeg.output(stream, wav_path, f='wav')
     ffmpeg.run(stream)
 
     wav, fr = _read_wave(wav_path)
     wav = wav[0]
 
     feat = dict()
+
+    feat['sample_rate'] = fr
+    feat['length'] = wav.size
+    feat['time_ms'] = wav.size * 1000 // fr
+
     feat['db'] = _db(wav)
     feat['power_spec'], feat['freq'], feat['pitch'] = _spectrum(wav, fr)
 
@@ -117,6 +125,8 @@ def extract(webm_path):
     feat['fbank_spec'], feat['fbank_freq'] = _fbank(wav, sample_rate=fr, nfilt=nfilt, high_freq=high_freq, type=filter_type)
 
     feat['pitch_reaper'] = _pitch_reaper(wav_path)
+
+
 
     return feat
 
