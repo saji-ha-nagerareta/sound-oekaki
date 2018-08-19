@@ -104,6 +104,7 @@ def _read_wave(path):
 
 def extract(webm_path):
     wav_path = webm_path.replace('.webm', '.wav')
+    wav_path = wav_path.replace('.ogg', '.wav')
     
     stream = ffmpeg.input(webm_path)
     stream = ffmpeg.output(stream, wav_path, acodec='pcm_s16le', ac=1)
