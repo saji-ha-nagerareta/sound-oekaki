@@ -12,7 +12,12 @@ var undoStack = new Array();
 
 var brushBank = {};
 
+var recCanvas, recCanvasCtx;
+var recCanvasW, recCanvasH;
 
+var audioCtx, srcNode, analyzNode;
+var mediaRecorder, mediaStream;
+var audioData;
 
 $("document").ready(function () {
 	canvas = $("#canvas");
@@ -26,17 +31,30 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	
 	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
+	recCanvas = $("#canvas-analyzer");
+	recCanvasCtx = recCanvas[0].getContext("2d");
 
-	/* init: HTML Canvas */
-	htmlCanvasRetinization();
+	
+	audioCtx = new AudioContext();
+
+	/* init: HTML Main Canvas */
+	htmlCanvasRetinization(canvas, ctx2d);
 	// set lineWidth
 	ctx2d.lineWidth = 10;
 	ctx2d.lineCap = "round";
 	ctx2d.lineJoin = "bevel";
+
+	/* init: HTML Analyzer Canvas */
+	htmlCanvasRetinization(recCanvas, recCanvasCtx);
+	recCanvasW = parseInt(recCanvas.prop("width"));
+	recCanvasH = parseInt(recCanvas.prop("height"));
+	recCanvasCtx.fillStyle = "#eee";
+	recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
+
+
 
 	/* init: Event Listener */
 	canvas.on({
@@ -105,7 +123,7 @@ $("document").ready(function () {
 	});
 
 	$(window).on("resize", function (ev) {
-		htmlCanvasRetinization();
+		htmlCanvasRetinization(canvas, ctx2d);
 	});
 
 	$(".number-spinner button").on("click", function () {
@@ -125,6 +143,75 @@ $("document").ready(function () {
 
 		btn.closest(".number-spinner").find("input").val(newVal);
 	});
+
+	
+	$("#btn-rec-start").on("click", function () {
+		if ( $("#btn-rec-start").hasClass("btn-danger") ) {
+			// Change View
+			$("#btn-rec-start").removeClass("btn-danger");
+			$("#btn-rec-start").addClass("btn-primary");
+			$("#btn-rec-start").text("Stop Rec");
+			$("#message-modal-rec").html("<big><strong><font color='red'>録音中...</font></strong></big>");
+
+			// Canvas Reset
+			recCanvasCtx.fillStyle = "#fff";
+			recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
+			
+			/* init: MediaRecorder */
+			mediaRecorder = new MediaRecorder(mediaStream, {
+				mimeType: "audio/webm"
+			});
+			
+			audioData = new Array();
+
+			mediaRecorder.ondataavailable = function (ev) {
+			// mediaRecorder.addEventListener('dataavailable', function (ev) {
+				if (ev.data.size > 0) {
+					audioData.push(ev.data);
+					console.log("Pushed");
+				}
+			}
+			// });
+			
+
+			mediaRecorder.addEventListener('stop', function () {
+				// File Download
+				const a = document.createElement('a');
+				a.href = URL.createObjectURL(new Blob(audioData));
+				a.download = 'rec.webm';
+				a.click();
+			});
+			
+			// Start Record
+			mediaRecorder.start();
+		} else {
+			// Change View
+			$("#btn-rec-start").removeClass("btn-primary");
+			$("#btn-rec-start").addClass("btn-danger");
+			$("#btn-rec-start").text("Start Rec");
+			$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
+
+			// Canvas Reset
+			recCanvasCtx.fillStyle = "#eee";
+			recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
+
+			// Stop Record
+			mediaRecorder.stop();
+			// Hide Modal
+			$("#recModal").modal('hide');
+		}
+		
+		// 
+	});
+
+	$("#recModal").on("hidden.bs.modal", function() {
+		$("#btn-rec-start").removeClass("btn-primary");
+		$("#btn-rec-start").addClass("btn-danger");
+		$("#btn-rec-start").text("Start Rec");
+		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
+	});
+
+	
 
 	// WebSocket: Message arrived
 	wSock.onmessage = function (ev) {
@@ -158,16 +245,56 @@ $("document").ready(function () {
 
 });
 
+navigator.mediaDevices.getUserMedia({ audio: true}).then(stream => {
+	mediaStream = stream;	
+	srcNode = audioCtx.createMediaStreamSource(stream);
+	analyzNode = audioCtx.createAnalyser();
+	analyzNode.fftSize = 2048;
+	srcNode.connect(analyzNode);
+
+	function drawAnalyzer() {
+		const fftData = new Uint8Array(analyzNode.fftSize);
+		analyzNode.getByteTimeDomainData(fftData);
+		const barWidth = recCanvasW / analyzNode.fftSize;
+
+		// Reset Canvas
+		recCanvasCtx.fillStyle = "#fff";
+		recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
+
+		for (let i = 0; i < analyzNode.fftSize; ++i) {
+			const value = fftData[i];
+			// console.log(value);
+			const percent = value / 255;
+			const height = (recCanvasH / 2) * percent;
+			const offset = (recCanvasH / 2) - height;
+
+			if ( $("#btn-rec-start").hasClass("btn-danger") ){
+				recCanvasCtx.fillStyle = 'lime';
+			} else {
+				recCanvasCtx.fillStyle = 'red';
+			}
+			
+			recCanvasCtx.fillRect(i * barWidth, offset, barWidth, 2);
+		}
+
+		requestAnimationFrame(drawAnalyzer);
+	}
+
+	drawAnalyzer();
+}).catch(error => {
+	console.log(error);
+});
+
 /* Function Declarations */
-function htmlCanvasRetinization() {
-	var canvasCssW = parseInt(canvas.css("width"));
-	var canvasCssH = parseInt(canvas.css("height"));
+function htmlCanvasRetinization(jqCanvas, ctx) {
+	var canvasCssW = parseInt(jqCanvas.css("width"));
+	var canvasCssH = parseInt(jqCanvas.css("height"));
 
 
-	canvas.prop("width", canvasCssW * 2);
-	canvas.prop("height", canvasCssH * 2);
+	jqCanvas.prop("width",  canvasCssW * 2);
+	jqCanvas.prop("height", canvasCssH * 2);
 
-	ctx2d.scale(2, 2);
+	ctx.scale(2, 2);
 }
 
 
