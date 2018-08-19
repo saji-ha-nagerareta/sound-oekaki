@@ -7,7 +7,7 @@ import librosa
 import subprocess
 import os
 
-from audio2pen import fft
+import fft
 
 
 def _db(wav):
@@ -55,22 +55,25 @@ def _fbank(wav, sample_rate, nfilt=26, high_freq=None, type='mono'):
     return power_spec, freq
 
 
-def _pitch(wav, sample_rate):
+def _pitch_librosa(wav, sample_rate):
     pitches, mags = librosa.piptrack(y=wav, sr=sample_rate, n_fft=1024, fmin=0)
     pitches = pitches[mags > np.median(mags)]
     mags = mags[mags > np.median(mags)]
-    print(np.sort(pitches))
-    print(mags[np.argsort(pitches)])
+    # print(np.sort(pitches))
+    # print(mags[np.argsort(pitches)])
+    #
+    # print(pitches[np.argsort(mags)])
+    # print(np.sort(mags))
+    #
+    # print(pitches.shape, np.max(pitches), np.min(pitches), np.median(pitches))
 
-    print(pitches[np.argsort(mags)])
-    print(np.sort(mags))
-
-    print(pitches.shape, np.max(pitches), np.min(pitches), np.median(pitches))
-    return pitches
+    pitches = pitches[pitches > 0]
+    pitche = np.mean(pitches)
+    return pitche
 
 
 def _pitch_reaper(wav_path):
-    pitch_path = wav_path.replace('.webm', '.wav')
+    pitch_path = wav_path.replace('.wav', '.pitch')
     cmd = ['reaper', '-i', wav_path, '-f', pitch_path, '-a']
     subprocess.run(cmd)
 
@@ -101,11 +104,11 @@ def _read_wave(path):
 
 def extract(webm_path):
     wav_path = webm_path.replace('.webm', '.wav')
-    if os.path.exists(wav_path):
-        os.remove(wav_path)
+    
     stream = ffmpeg.input(webm_path)
-    stream = ffmpeg.output(stream, wav_path, f='wav')
-    ffmpeg.run(stream)
+    stream = ffmpeg.output(stream, wav_path, acodec='pcm_s16le', ac=1)
+    stream = ffmpeg.overwrite_output(stream)
+    ffmpeg.run(stream, capture_stderr=True)
 
     wav, fr = _read_wave(wav_path)
     wav = wav[0]
@@ -126,10 +129,11 @@ def extract(webm_path):
 
     feat['pitch_reaper'] = _pitch_reaper(wav_path)
 
-
+    wav, fr = librosa.load(wav_path)
+    feat['pitch_librosa'] = _pitch_librosa(wav, fr)
 
     return feat
 
 
 if __name__ == '__main__':
-    print(extract('c2.webm'))
+    print(extract('se_maoudamashii_battle18.wav'))
