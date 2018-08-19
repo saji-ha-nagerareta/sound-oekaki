@@ -3,7 +3,7 @@
 ### Example user template
 
 # IntelliJ project files
-.idea
+.idea/
 *.iml
 out
 gen### Python template
@@ -112,7 +112,11 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-.DS_Store
-
 # audio files
 tmp/
+
+# Mac OS X
+.DS_Store
+
+# Visual Studio Code
+.vscode
