@@ -116,3 +116,4 @@ venv.bak/
 
 # audio files
 tmp/
+.vscode/settings.json
