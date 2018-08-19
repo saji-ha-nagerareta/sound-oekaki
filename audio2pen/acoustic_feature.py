@@ -60,13 +60,6 @@ def _pitch_librosa(wav, sample_rate):
     pitches, mags = librosa.piptrack(y=wav, sr=sample_rate, n_fft=1024, fmin=0)
     pitches = pitches[mags > np.median(mags)]
     mags = mags[mags > np.median(mags)]
-    # print(np.sort(pitches))
-    # print(mags[np.argsort(pitches)])
-    #
-    # print(pitches[np.argsort(mags)])
-    # print(np.sort(mags))
-    #
-    # print(pitches.shape, np.max(pitches), np.min(pitches), np.median(pitches))
 
     pitches = pitches[pitches > 0]
     pitche = np.mean(pitches)
@@ -134,7 +127,7 @@ def extract(webm_path):
     stream = ffmpeg.input(webm_path)
     stream = ffmpeg.output(stream, wav_path, acodec='pcm_s16le', ac=1)
     stream = ffmpeg.overwrite_output(stream)
-    ffmpeg.run(stream, capture_stderr=False)
+    ffmpeg.run(stream, capture_stderr=True)
 
     wav, fr = _read_wave(wav_path)
     wav = wav[0]
