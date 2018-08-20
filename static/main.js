@@ -3,9 +3,11 @@
 /***********************************************/
 /********** VARIABLE DECLARATION ***************/
 /***********************************************/
-var canvas, color, penWidth, brushImg, ctx2d, pLast;
+var canvas, color, penWidth, ctx2d, pLast;
 var wSock, wsId;
 var isDrawing, isBrushDrawing, isCanvasSaved;
+
+var brushImg = null;
 
 var SIZE_UNDO_STACK = 20;
 var undoStack = new Array();
@@ -19,11 +21,12 @@ var audioCtx, srcNode, analyzNode;
 var mediaRecorder, mediaStream;
 var audioData;
 
+
 $("document").ready(function () {
 	canvas = $("#canvas");
 	color = $("#input-color-picker");
 	penWidth = $("#pen-size");
-	brushImg = $("img#img-pen-style")[0];
+	// brushImg = $("img#img-pen-style")[0];
 	ctx2d = canvas[0].getContext("2d");
 	pLast = { 'x': 0, 'y': 0 };
 
@@ -31,7 +34,8 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
+	// wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
+	wSock = new WebSocket(`ws://localhost:8888/soundOekaki/room1234`);
 	wsId = -1;
 
 	recCanvas = $("#canvas-analyzer");
@@ -114,6 +118,21 @@ $("document").ready(function () {
 	});
 
 	$("#btn-draw-select").on("click", function () {
+		if (brushImg == null) {
+			$("#placeholder-message-dialog").html(`
+				<div id='message-dialog' class='alert alert-danger alert-dismissible fade show' role='alert'>
+					<span id='message-text'>
+						<strong>Error! </strong>: ブラシが設定されていません。
+					</span>
+					<button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+						<span aria-hidden='true'>&times;</span>
+					</button>
+				</div>
+			`);
+			return;
+		}
+
+
 		if (isBrushDrawing) {
 			$("#btn-draw-select").text("Pen");
 		} else {
@@ -144,6 +163,133 @@ $("document").ready(function () {
 		btn.closest(".number-spinner").find("input").val(newVal);
 	});
 
+	/*************************************/
+	/******* AUDIO RECORD MODAL **********/
+	/*************************************/
+
+	// Init: Audio I/O
+	navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+		mediaStream = stream;
+		srcNode = audioCtx.createMediaStreamSource(stream);
+		analyzNode = audioCtx.createAnalyser();
+		analyzNode.fftSize = 2048;
+		srcNode.connect(analyzNode);
+
+		function drawAnalyzer() {
+			const fftData = new Uint8Array(analyzNode.fftSize);
+			analyzNode.getByteTimeDomainData(fftData);
+			const barWidth = recCanvasW / analyzNode.fftSize;
+
+			// Reset Canvas
+			recCanvasCtx.fillStyle = "#fff";
+			recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
+
+			for (let i = 0; i < analyzNode.fftSize; ++i) {
+				const value = fftData[i];
+				// console.log(value);
+				const percent = value / 255;
+				const height = (recCanvasH / 2) * percent;
+				const offset = (recCanvasH / 2) - height;
+
+				if ($("#btn-rec-start").hasClass("btn-danger")) {
+					recCanvasCtx.fillStyle = 'lime';
+				} else {
+					recCanvasCtx.fillStyle = 'red';
+				}
+
+				recCanvasCtx.fillRect(i * barWidth, offset, barWidth, 2);
+			}
+
+			requestAnimationFrame(drawAnalyzer);
+		}
+
+		drawAnalyzer();
+	}).catch(error => {
+		console.log(error);
+	});
+
+	// EVENT: fired before show
+	$("#recModal").on("show.bs.modal", function () {
+		// Restore: Modal
+		$("#canvas-analyzer").show();
+		$("#btn-modal-close").removeProp("disabled");
+		$("#btn-rec-start").removeProp("disabled");
+		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
+
+
+		// Init: Media Recorder (FIX: Remove mime type)
+		mediaRecorder = new MediaRecorder(mediaStream);
+		audioData = new Array();
+
+		// Set: Event Listener
+		mediaRecorder.addEventListener('dataavailable', function (ev) {
+			if (ev.data.size > 0) {
+				audioData.push(ev.data);
+				console.log("Pushed");
+			}
+		});
+		mediaRecorder.addEventListener('stop', function () {
+			// UPDATE VIEW
+			$("#canvas-analyzer").hide();
+			$("#btn-modal-close").prop("disabled", true);
+			$("#btn-rec-start").prop("disabled", true);
+			$("#message-modal-rec").html('<font color="blue"><i class="fa fa-circle-o-notch fa-spin"></i> 生成中 ... </font>');
+
+
+			// POST audio data to server using Ajax
+			// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
+			$.ajax({
+				type: "POST",
+				url: `http://${window.location.host}/pen`,
+				contentType: "application/octet-stream",
+				data: (new Blob(audioData, { type: 'audio/webm' })),
+				processData: false,
+				dataType: "json",
+				success: function (data, dataType) {
+					// @param      data: Response data
+					// @param  dataType: Data type of 'data'
+
+					console.log("Ajax: POST Success and Received data !");
+					console.log(`dataType: ${dataType}`);
+					console.log("=====DATA START=====");
+					console.log(data.data);
+					console.log("=====DATA   END=====");
+					// Set Brush Image
+					brushImg = base64ToImg(data.data);
+
+					// Show Result
+					$("#modal-body");
+					$("#message-modal-rec").text('ブラシが生成されました。');
+				},
+				error: function (XMLHttpRequest, textStatus, errorThrown) {
+					// @param  XMLHttpRequest: XMLHttpRequest object
+					// @param      textStatus: String of error message
+					// @param     errorThrown: unknonwn ...
+
+					console.log("Ajax: POST Failed !");
+					console.log(` textStatus: ${textStatus}`);
+					console.log(`errorThrown: ${errorThrown}`);
+				}
+
+			});
+
+			// File Download
+			// const a = document.createElement('a');
+			// a.href = URL.createObjectURL(new Blob(audioData));
+			// a.download = 'rec.webm';
+			// a.click();
+		});
+
+	});
+
+	// EVENT: fired after closed
+	$("#recModal").on("hidden.bs.modal", function () {
+		// Stop MediaRecorder
+		if (mediaRecorder.state === "recording") {
+			mediaRecorder.stop();
+		}
+	});
+
 
 	$("#btn-rec-start").on("click", function () {
 		if ( $("#btn-rec-start").hasClass("btn-danger") ) {
@@ -157,61 +303,9 @@ $("document").ready(function () {
 			recCanvasCtx.fillStyle = "#fff";
 			recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
 
-			/* init: MediaRecorder */
-			mediaRecorder = new MediaRecorder(mediaStream, {
-				mimeType: "audio/webm"
-			});
-
-			audioData = new Array();
-
-			mediaRecorder.ondataavailable = function (ev) {
-			// mediaRecorder.addEventListener('dataavailable', function (ev) {
-				if (ev.data.size > 0) {
-					audioData.push(ev.data);
-					console.log("Pushed");
-				}
-			}
-			// });
-
-
-			mediaRecorder.addEventListener('stop', function () {
-				// POST audio data to server using Ajax
-				// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
-				$.ajax({
-					type: "POST",
-					url: `http://${window.location.host}/pen`,
-					contentType: "application/octet-stream",
-					data: (new Blob(audioData, { type: 'audio/webm' })),
-					processData: false,
-					dataType: "json",
-					success: function (data, dataType) {
-						// @param      data: Response data
-						// @param  dataType: Data type of 'data'
-
-						console.log("Ajax: POST Success !");
-					},
-					error: function (XMLHttpRequest, textStatus, errorThrown) {
-						// @param  XMLHttpRequest: XMLHttpRequest object
-						// @param      textStatus: String of error message
-						// @param     errorThrown: unknonwn ...
-
-						console.log("Ajax: POST Failed !");
-						console.log(` textStatus: ${textStatus}`);
-						console.log(`errorThrown: ${errorThrown}`);
-					}
-
-				});
-
-
-				// File Download
-				const a = document.createElement('a');
-				a.href = URL.createObjectURL(new Blob(audioData));
-				a.download = 'rec.webm';
-				a.click();
-			});
-
 			// Start Record
 			mediaRecorder.start();
+
 		} else {
 			// Change View
 			$("#btn-rec-start").removeClass("btn-primary");
@@ -225,20 +319,13 @@ $("document").ready(function () {
 
 			// Stop Record
 			mediaRecorder.stop();
-			// Hide Modal
-			$("#recModal").modal('hide');
 		}
 
-		//
 	});
 
-	$("#recModal").on("hidden.bs.modal", function() {
-		$("#btn-rec-start").removeClass("btn-primary");
-		$("#btn-rec-start").addClass("btn-danger");
-		$("#btn-rec-start").text("Start Rec");
-		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
-	});
-
+	/*************************************/
+	/******* AUDIO RECORD MODAL **********/
+	/*************************************/
 
 
 	// WebSocket: Message arrived
@@ -273,45 +360,7 @@ $("document").ready(function () {
 
 });
 
-navigator.mediaDevices.getUserMedia({ audio: true}).then(stream => {
-	mediaStream = stream;
-	srcNode = audioCtx.createMediaStreamSource(stream);
-	analyzNode = audioCtx.createAnalyser();
-	analyzNode.fftSize = 2048;
-	srcNode.connect(analyzNode);
 
-	function drawAnalyzer() {
-		const fftData = new Uint8Array(analyzNode.fftSize);
-		analyzNode.getByteTimeDomainData(fftData);
-		const barWidth = recCanvasW / analyzNode.fftSize;
-
-		// Reset Canvas
-		recCanvasCtx.fillStyle = "#fff";
-		recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
-
-		for (let i = 0; i < analyzNode.fftSize; ++i) {
-			const value = fftData[i];
-			// console.log(value);
-			const percent = value / 255;
-			const height = (recCanvasH / 2) * percent;
-			const offset = (recCanvasH / 2) - height;
-
-			if ( $("#btn-rec-start").hasClass("btn-danger") ){
-				recCanvasCtx.fillStyle = 'lime';
-			} else {
-				recCanvasCtx.fillStyle = 'red';
-			}
-
-			recCanvasCtx.fillRect(i * barWidth, offset, barWidth, 2);
-		}
-
-		requestAnimationFrame(drawAnalyzer);
-	}
-
-	drawAnalyzer();
-}).catch(error => {
-	console.log(error);
-});
 
 /* Function Declarations */
 function htmlCanvasRetinization(jqCanvas, ctx) {
@@ -336,7 +385,6 @@ function calcAngle(p0, p1) {
 
 function drawing(evMouse) {
 	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
-	var penImg = $("img#img-pen-style")[0];
 
 	var dist = calcDistance(pLast, pCurrent);
 	var angl = calcAngle(pLast, pCurrent);
@@ -358,7 +406,7 @@ function drawing(evMouse) {
 
 		if (isBrushDrawing) {
 			// Draw brush
-			ctx2d.drawImage(penImg, x - 0.5 * penImg.naturalWidth, y - 0.5 * penImg.naturalHeight);
+			ctx2d.drawImage(brushImg, x - 0.5 * brushImg.naturalWidth, y - 0.5 * brushImg.naturalHeight);
 		} else {
 			// Draw line
 			ctx2d.lineTo(x, y);
@@ -428,13 +476,13 @@ function syncCanvas(payload){
 	ctx2d.beginPath();
 
 	if (payload.type === "brush") {
-		var penImg = brushBank[payload.id];
+		var brushBankImg = brushBank[payload.id];
 
-		if (typeof penImg === "undefined") {
+		if (typeof brushBankImg === "undefined") {
 			console.log("Error!: Brush not found");
 		} else {
 			// Draw brush
-			ctx2d.drawImage(penImg, payload.pos.x - 0.5 * penImg.naturalWidth, payload.pos.y - 0.5 * penImg.naturalHeight);
+			ctx2d.drawImage(brushBankImg, payload.pos.x - 0.5 * brushBankImg.naturalWidth, payload.pos.y - 0.5 * brushBankImg.naturalHeight);
 		}
 
 	} else {
@@ -467,8 +515,5 @@ function base64ToImg (strBase64) {
 	// REF: https://qiita.com/yasumodev/items/e1708f01ff87692185cd
 	var img = new Image();
 	img.src = strBase64;
-	// Debug
-	$("#label-brush-img").text("RECEIVED!!");
-	$("#brush-img")[0].src = strBase64;
 	return img;
 }

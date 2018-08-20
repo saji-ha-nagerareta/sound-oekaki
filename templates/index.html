@@ -29,6 +29,9 @@
       <p>HTML Canvas を利用した描画部分の開発サンプル</p>
     </div>
 
+    <div id="placeholder-message-dialog">
+    </div>
+
     <div class="card">
       <div class="card-header">
         <div class="display-4">Canvas</div>
@@ -61,7 +64,7 @@
             </button>
           </div>
           <div class="col">
-            <button id="btn-modal-rec" class="btn btn-raised btn-danger" data-toggle="modal" data-target="#recModal">
+            <button id="btn-toggle-modal" class="btn btn-raised btn-danger" data-toggle="modal" data-target="#recModal">
               REC
             </button>
             <!-- MODAL -->
@@ -75,7 +78,9 @@
                     </button>
                   </div>
                   <div class="modal-body">
-                    <span id="message-modal-rec"><big>録音するには<strong>Start</strong>を押してください</big></span>
+                    <span id="message-modal-rec">
+                      <big>録音するには<strong>Start</strong>を押してください</big>
+                    </span>
                     <canvas id="canvas-analyzer"></canvas>
                   </div>
                   <div class="modal-footer">
