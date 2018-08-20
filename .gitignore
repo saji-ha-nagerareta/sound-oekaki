@@ -118,5 +118,11 @@ tmp/
 # Mac OS X
 .DS_Store
 
+<<<<<<< HEAD
+# audio files
+tmp/
+.vscode/settings.json
+=======
 # Visual Studio Code
 .vscode
+>>>>>>> 91e422502c083302ba47a09455c9ff2daf47c3da

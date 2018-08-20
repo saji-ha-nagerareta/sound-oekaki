@@ -99,9 +99,6 @@ $("document").ready(function () {
 				drawing(ev);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
-		},
-		"mouseout": function (ev) {
-			isDrawing = false;
 		}
 	});
 
