@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
-import fft
+from audio2pen import fft
 
 
 def _activity_detect(data, th):

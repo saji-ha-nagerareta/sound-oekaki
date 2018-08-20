@@ -10,6 +10,8 @@ import uuid
 import cv2
 import base64
 
+from audio2pen import acoustic_feature, generatePen
+
 from time import sleep
 
 # 各ルーム接続者
@@ -46,16 +48,21 @@ class PenInfoHandler(tornado.web.RequestHandler):
 
         # 仮実装。Ajaxで送られてきていることを想定
 
-        # テスト：音声のファイル出力
-        with open("./receive.webm", "wb") as f:
+        # 音声のファイル出力
+        dumppath = "./tmp/"+uuid.uuid4().hex
+        print(dumppath)
+        with open(dumppath, "wb") as f:
             f.write(self.request.body)
         print("Audio File Output.")
 
-        # Debug: 数秒待つ (本番再現)
-        sleep(3)
+        # ブラシ生成
+        brushpath = dumppath + '.png'
+        feature = acoustic_feature.extract(dumppath)
+        img = generatePen.generateBrush(feature)
+        cv2.imwrite(brushpath, img)
 
-        # テスト：適当なブラシ画像の返却
-        with open("./static/pen_c2.png", "rb") as f:
+        # 生成されたブラシ画像の返却
+        with open(brushpath, "rb") as f:
             mime_type = "image/png"
             b64_data = base64.b64encode(f.read()).decode('utf-8')
 

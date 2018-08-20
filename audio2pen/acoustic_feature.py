@@ -7,8 +7,8 @@ import librosa
 import subprocess
 import os
 
-import fft
-import vad
+from audio2pen import fft
+from audio2pen import vad
 
 
 def _db(wav):
@@ -96,7 +96,7 @@ def _sound_section(wav, sample_rate):
 
     label = vad.power(wav, frame_len=frame_len, frame_step=frame_step, th=th)
     label = vad.post_filter(label, pause_len=pause_len)
-    _write_label(label, sample_rate)
+    # _write_label(label, sample_rate)
 
     sect = []
     for l in label:

@@ -2,8 +2,8 @@
 from cv2 import cv2
 import numpy as np
 import sys
-from acoustic_feature import extract
-from createFilter import createFilter
+from audio2pen.acoustic_feature import extract
+from audio2pen.createFilter import createFilter
 from math import cos, sin, degrees, radians, log10
 
 WIDTH, HEIGHT = 33, 33
