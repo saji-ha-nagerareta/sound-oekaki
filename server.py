@@ -39,6 +39,13 @@ class PenInfoHandler(tornado.web.RequestHandler):
         self.write({"data":base64.b64encode(img_png).decode('utf-8')})
 
     def post(self):
+        print(self.request.headers)
+        print(self.request.body)
+
+        with open("./receive.webm", "wb") as f:
+            f.write(self.request.body)
+
+
         if not self.request.files:
             print(self.request.path + " Wrong request:No file.")
             raise tornado.web.HTTPError(400)

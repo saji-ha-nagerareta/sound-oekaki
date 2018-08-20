@@ -37,7 +37,7 @@ $("document").ready(function () {
 	recCanvas = $("#canvas-analyzer");
 	recCanvasCtx = recCanvas[0].getContext("2d");
 
-	
+
 	audioCtx = new AudioContext();
 
 	/* init: HTML Main Canvas */
@@ -144,7 +144,7 @@ $("document").ready(function () {
 		btn.closest(".number-spinner").find("input").val(newVal);
 	});
 
-	
+
 	$("#btn-rec-start").on("click", function () {
 		if ( $("#btn-rec-start").hasClass("btn-danger") ) {
 			// Change View
@@ -156,12 +156,12 @@ $("document").ready(function () {
 			// Canvas Reset
 			recCanvasCtx.fillStyle = "#fff";
 			recCanvasCtx.fillRect(0, 0, recCanvasW, recCanvasH);
-			
+
 			/* init: MediaRecorder */
 			mediaRecorder = new MediaRecorder(mediaStream, {
 				mimeType: "audio/webm"
 			});
-			
+
 			audioData = new Array();
 
 			mediaRecorder.ondataavailable = function (ev) {
@@ -172,16 +172,44 @@ $("document").ready(function () {
 				}
 			}
 			// });
-			
+
 
 			mediaRecorder.addEventListener('stop', function () {
+				// POST audio data to server using Ajax
+				// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
+				$.ajax({
+					type: "POST",
+					url: `http://${window.location.host}/pen`,
+					contentType: "application/octet-stream",
+					data: (new Blob(audioData, { type: 'audio/webm' })),
+					processData: false,
+					dataType: "json",
+					success: function (data, dataType) {
+						// @param      data: Response data
+						// @param  dataType: Data type of 'data'
+
+						console.log("Ajax: POST Success !");
+					},
+					error: function (XMLHttpRequest, textStatus, errorThrown) {
+						// @param  XMLHttpRequest: XMLHttpRequest object
+						// @param      textStatus: String of error message
+						// @param     errorThrown: unknonwn ...
+
+						console.log("Ajax: POST Failed !");
+						console.log(` textStatus: ${textStatus}`);
+						console.log(`errorThrown: ${errorThrown}`);
+					}
+
+				});
+
+
 				// File Download
 				const a = document.createElement('a');
 				a.href = URL.createObjectURL(new Blob(audioData));
 				a.download = 'rec.webm';
 				a.click();
 			});
-			
+
 			// Start Record
 			mediaRecorder.start();
 		} else {
@@ -200,8 +228,8 @@ $("document").ready(function () {
 			// Hide Modal
 			$("#recModal").modal('hide');
 		}
-		
-		// 
+
+		//
 	});
 
 	$("#recModal").on("hidden.bs.modal", function() {
@@ -211,33 +239,33 @@ $("document").ready(function () {
 		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
 	});
 
-	
+
 
 	// WebSocket: Message arrived
 	wSock.onmessage = function (ev) {
-		var data = JSON.parse(ev.data); 
+		var data = JSON.parse(ev.data);
 		// var data = ev.data;
 		var action = data.action;
 		var payload = data.payload;
 
-		
+
 		console.log(`WebSocket: Received Message ! (action = ${action})`);
 		switch (action) {
 			case "ID":
 				wsId = payload.id;
 				console.log(`WebSocket: Receive ID ! (id = ${wsId})`)
 				break;
-			
+
 			case "DRAW":
 				syncCanvas(payload);
 				break;
 
 			case "EOD": // EOD := End Of Drawing
 				break;
-			
+
 			case "SEND_BRUSH":
 				brushBank[payload.id] = base64ToImg(payload.imgData);
-		
+
 			default:
 				break;
 		}
@@ -246,7 +274,7 @@ $("document").ready(function () {
 });
 
 navigator.mediaDevices.getUserMedia({ audio: true}).then(stream => {
-	mediaStream = stream;	
+	mediaStream = stream;
 	srcNode = audioCtx.createMediaStreamSource(stream);
 	analyzNode = audioCtx.createAnalyser();
 	analyzNode.fftSize = 2048;
@@ -273,7 +301,7 @@ navigator.mediaDevices.getUserMedia({ audio: true}).then(stream => {
 			} else {
 				recCanvasCtx.fillStyle = 'red';
 			}
-			
+
 			recCanvasCtx.fillRect(i * barWidth, offset, barWidth, 2);
 		}
 
@@ -398,7 +426,7 @@ function sendCanvasWS(x, y) {
 function syncCanvas(payload){
 
 	ctx2d.beginPath();
-	
+
 	if (payload.type === "brush") {
 		var penImg = brushBank[payload.id];
 

@@ -4,20 +4,15 @@
 <head>
   <meta charset="utf-8" />
   <title>Page Title</title>
-  <!-- <link rel="stylesheet" type="text/css" media="screen" href="{{static_url("main.css")}}" /> -->
-  <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css" />
-  <!-- jQuery -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+  <link rel="stylesheet" type="text/css" media="screen" href="{{static_url("main.css")}}" />
+  <!-- <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css" /> -->
   <!-- Material Design for Bootstrap -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css"
     integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U"
-    crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
-    crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
   <!-- Font Awesome -->
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' />
 
@@ -59,7 +54,7 @@
             </button>
             <input id="input-color-picker" type="color">
           </div>
-          
+
           <div class="col">
             <button id="btn-draw-select" class="btn btn-raised btn-secondary">
               Pen
@@ -114,17 +109,13 @@
     </div>
 
 
-    <!-- <img src="{{static_url("Brush2.png")}}" alt="pen.png" id="img-pen-style" style="display: none"> -->
-    <img src="../static/Brush2.png" alt="pen.png" id="img-pen-style" style="display: none">
-    <br>
-    <div>
-      <p id="label-brush-img">not Received: </p>
-      <img src="" alt="" id="brush-img">
-    </div>
+    <img src="{{static_url("Brush2.png")}}" alt="pen.png" id="img-pen-style" style="display: none">
+    <!-- <img src="../static/Brush2.png" alt="pen.png" id="img-pen-style" style="display: none"> -->
   </div>
 
 </body>
-<!-- <script src="{{static_url("main.js")}}"></script> -->
-<script src="../static/main.js"></script>
+<script src="{{static_url("main.js")}}"></script>
+<!-- <script src="../static/main.js"></script> -->
 
 </html>
+<!--  -->
