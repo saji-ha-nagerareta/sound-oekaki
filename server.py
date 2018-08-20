@@ -10,6 +10,8 @@ import uuid
 import cv2
 import base64
 
+from time import sleep
+
 # 各ルーム接続者
 ws_con = {}
 
@@ -39,29 +41,29 @@ class PenInfoHandler(tornado.web.RequestHandler):
         self.write({"data":base64.b64encode(img_png).decode('utf-8')})
 
     def post(self):
-        if not self.request.files:
-            print(self.request.path + " Wrong request:No file.")
-            raise tornado.web.HTTPError(400)
-        else:
-            # 仮実装。Ajaxで送られてきていることを想定
-            file = self.request.body
-            # Todo:ふるわらがいい感じにしてくれる
-            # print(file)
-            # 受け取ったファイルのやり取りの仕方は要検討
-            # self.request.files["file"][0]["filename"]:ファイル名
-            #                               ["body"]:バイナリ
-            #                               ["content_type"]:
-            dumppath = "./tmp/"+uuid.uuid4().hex+".webm"
-            dump = open(dumppath, 'wb')
-            dump.write(file["body"])
-            # sound2pen
+        print(self.request.headers)
+        print(self.request.body)
 
-            # for test
-            img = cv2.imread("./static/brush3.png", cv2.IMREAD_UNCHANGED)
-            # cv2.imshow("test",img)
-            # cv2.waitKey(0)
-            result, img_png = cv2.imencode(".png", img)
-            self.write({"data": base64.b64encode(img_png).decode('utf-8')})
+        # 仮実装。Ajaxで送られてきていることを想定
+
+        # テスト：音声のファイル出力
+        with open("./receive.webm", "wb") as f:
+            f.write(self.request.body)
+        print("Audio File Output.")
+
+        # Debug: 数秒待つ (本番再現)
+        sleep(3)
+
+        # テスト：適当なブラシ画像の返却
+        with open("./static/pen_c2.png", "rb") as f:
+            mime_type = "image/png"
+            b64_data = base64.b64encode(f.read()).decode('utf-8')
+
+            self.write(
+                {
+                    "data": "data:{}; base64, {}".format(mime_type, b64_data)
+                }
+            )
 
 
 
@@ -87,7 +89,9 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
-        print("roomID:" + self.path_args[0] + "    msg:" + message)
+        if "SEND_BRUSH" in message:
+            print("roomID:" + self.path_args[0] + "    msg:" + message)
+
         for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
                 continue

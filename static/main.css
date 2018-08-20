@@ -10,11 +10,17 @@ body {
 .card-img-bottom {
 	padding: 10px;
 }
-canvas {
+#canvas {
 	background: #ffffff;
 	border: 1px solid #000;
 	width: 100%;
 	height: 500px;
+}
+
+#canvas-analyzer {
+	margin-top: 20px;
+	width: 450px;
+	height: 200px;
 }
 input[type="image"]{
 	padding: 2px;

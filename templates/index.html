@@ -5,18 +5,14 @@
   <meta charset="utf-8" />
   <title>Page Title</title>
   <link rel="stylesheet" type="text/css" media="screen" href="{{static_url("main.css")}}" />
-  <!-- jQuery -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+  <!-- <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css" /> -->
   <!-- Material Design for Bootstrap -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css"
     integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U"
-    crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
-    crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
   <!-- Font Awesome -->
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' />
 
@@ -31,6 +27,9 @@
       </h1>
       <hr>
       <p>HTML Canvas を利用した描画部分の開発サンプル</p>
+    </div>
+
+    <div id="placeholder-message-dialog">
     </div>
 
     <div class="card">
@@ -58,7 +57,43 @@
             </button>
             <input id="input-color-picker" type="color">
           </div>
+
           <div class="col">
+            <button id="btn-draw-select" class="btn btn-raised btn-secondary">
+              Pen
+            </button>
+          </div>
+          <div class="col">
+            <button id="btn-toggle-modal" class="btn btn-raised btn-danger" data-toggle="modal" data-target="#recModal">
+              REC
+            </button>
+            <!-- MODAL -->
+            <div class="modal fade" id="recModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3 class="modal-title" id="exampleModalLabel">音を録音する</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <span id="message-modal-rec">
+                      <big>録音するには<strong>Start</strong>を押してください</big>
+                    </span>
+                    <canvas id="canvas-analyzer"></canvas>
+                  </div>
+                  <div class="modal-footer">
+                    <button id="btn-modal-close" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button id="btn-rec-start" type="button" class="btn btn-danger">Start Rec</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-xs-8">
             <div class="input-group number-spinner">
               <span class="input-group-btn">
                 <button class="btn btn-default" data-dir="dwn">
@@ -73,11 +108,6 @@
               </span>
             </div>
           </div>
-          <div class="col">
-            <button id="btn-draw-select" class="btn btn-raised btn-secondary">
-              Pen
-            </button>
-          </div>
         </div>
       </div>
 
@@ -85,14 +115,12 @@
 
 
     <img src="{{static_url("Brush2.png")}}" alt="pen.png" id="img-pen-style" style="display: none">
-    <br>
-    <div>
-      <p id="label-brush-img">not Received: </p>
-      <img src="" alt="" id="brush-img">
-    </div>
+    <!-- <img src="../static/Brush2.png" alt="pen.png" id="img-pen-style" style="display: none"> -->
   </div>
 
 </body>
 <script src="{{static_url("main.js")}}"></script>
+<!-- <script src="../static/main.js"></script> -->
 
 </html>
+<!--  -->
