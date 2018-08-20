@@ -448,13 +448,8 @@ function calcAngle(p0, p1) {
 	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-<<<<<<< HEAD
 function drawing(evMouse) {
 	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
-=======
-function drawing(pCurrent) {
-	var penImg = $("img#img-pen-style")[0];
->>>>>>> 328bc0ef51a39d663e817f6a17eeb59aadc194a8
 
 	var dist = calcDistance(pLast, pCurrent);
 	var angl = calcAngle(pLast, pCurrent);
