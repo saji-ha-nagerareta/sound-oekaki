@@ -79,7 +79,7 @@ def generateBrush(feature):
 
 
     img_filter = cv2.bitwise_not(cv2.bitwise_and(createFilter(4,1),img_filter))
-    
+
 
 
     print(p)
@@ -106,7 +106,7 @@ def generateBrush(feature):
 
     img_rgba[:, :, 3] = 255-img_filter
 
-
+    print("Success to create !!")
     return img_rgba
 
 # for test
@@ -124,4 +124,3 @@ if __name__ == '__main__':
     # img = powerSpectrum2Brush(feature)
     img = generateBrush(feature)
     cv2.imwrite("geneb.png", img)
-

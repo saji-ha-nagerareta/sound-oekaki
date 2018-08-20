@@ -14,6 +14,9 @@ from audio2pen import acoustic_feature, generatePen
 
 from time import sleep
 
+# CONST
+TEMP_DIR = "./tmp/"
+
 # 各ルーム接続者
 ws_con = {}
 
@@ -49,20 +52,24 @@ class PenInfoHandler(tornado.web.RequestHandler):
         # 仮実装。Ajaxで送られてきていることを想定
 
         # 音声のファイル出力
-        dumppath = "./tmp/"+uuid.uuid4().hex
-        print(dumppath)
-        with open(dumppath, "wb") as f:
+        if not os.path.exists(TEMP_DIR):
+            os.mkdir(TEMP_DIR)
+
+        dump_path = TEMP_DIR + uuid.uuid4().hex
+        print(dump_path)
+
+        with open(dump_path, "wb") as f:
             f.write(self.request.body)
         print("Audio File Output.")
 
         # ブラシ生成
-        brushpath = dumppath + '.png'
-        feature = acoustic_feature.extract(dumppath)
+        brush_path = dump_path + '.png'
+        feature = acoustic_feature.extract(dump_path)
         img = generatePen.generateBrush(feature)
-        cv2.imwrite(brushpath, img)
+        cv2.imwrite(brush_path, img)
 
         # 生成されたブラシ画像の返却
-        with open(brushpath, "rb") as f:
+        with open(brush_path, "rb") as f:
             mime_type = "image/png"
             b64_data = base64.b64encode(f.read()).decode('utf-8')
 

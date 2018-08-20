@@ -43,8 +43,8 @@ input#pen-size {
 }
 
 #modal-brush-img {
-	/* border: 1px solid #eee; */
 	text-align: center;
-	width: 128px;
-	height: 128px;
+	min-width:  128px;
+	min-height: 128px;
+	margin: 10px;
 }

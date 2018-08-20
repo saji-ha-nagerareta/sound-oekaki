@@ -21,7 +21,15 @@ var audioCtx, srcNode, analyzNode;
 var mediaRecorder, mediaStream;
 var audioData;
 
+/***********************************************/
+/********** VARIABLE DECLARATION ***************/
+/***********************************************/
 
+
+
+/***************************************/
+/********** DOM SETTINGS ***************/
+/***************************************/
 $("document").ready(function () {
 	canvas = $("#canvas");
 	color = $("#input-color-picker");
@@ -34,8 +42,7 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	// wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
-	wSock = new WebSocket(`ws://localhost:8888/soundOekaki/room1234`);
+	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
 	recCanvas = $("#canvas-analyzer");
@@ -44,14 +51,15 @@ $("document").ready(function () {
 
 	audioCtx = new AudioContext();
 
-	/* init: HTML Main Canvas */
+	/* Init: HTML Main Canvas */
 	htmlCanvasRetinization(canvas, ctx2d);
-	// set lineWidth
+
+	// Set: lineWidth
 	ctx2d.lineWidth = 10;
 	ctx2d.lineCap = "round";
 	ctx2d.lineJoin = "bevel";
 
-	/* init: HTML Analyzer Canvas */
+	/* Init: HTML Analyzer Canvas */
 	htmlCanvasRetinization(recCanvas, recCanvasCtx);
 	recCanvasW = parseInt(recCanvas.prop("width"));
 	recCanvasH = parseInt(recCanvas.prop("height"));
@@ -60,11 +68,12 @@ $("document").ready(function () {
 
 
 
-	/* init: Event Listener */
+	/* Init: Event Listener */
 	canvas.on({
 		"mousedown": function (ev) {
 			isCanvasSaved = false;
 			isDrawing = true;
+
 			// Send Brush data when isBrushDrawing
 			if (isBrushDrawing) {
 				wSock.send(JSON.stringify({
@@ -76,18 +85,21 @@ $("document").ready(function () {
 				}));
 			}
 		},
+
 		"mouseout": function (ev) {
 			isDrawing = false;
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
 		},
+
 		"mouseup": function (ev) {
 			isDrawing = false;
 			wSock.send(JSON.stringify({
 				"action": 'EOD' // End of Drawing
 			}));
 		},
+
 		"mousemove": function (ev) {
 			if (isDrawing) {
 				// Save Canvas;
@@ -100,6 +112,7 @@ $("document").ready(function () {
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		}
+
 	});
 
 	$("#btn-clear-canvas").on("click", function (ev) {
@@ -128,7 +141,6 @@ $("document").ready(function () {
 			`);
 			return;
 		}
-
 
 		if (isBrushDrawing) {
 			$("#btn-draw-select").text("Pen");
@@ -183,7 +195,6 @@ $("document").ready(function () {
 
 			for (let i = 0; i < analyzNode.fftSize; ++i) {
 				const value = fftData[i];
-				// console.log(value);
 				const percent = value / 255;
 				const height = (recCanvasH / 2) * percent;
 				const offset = (recCanvasH / 2) - height;
@@ -205,7 +216,7 @@ $("document").ready(function () {
 		console.log(error);
 	});
 
-	// EVENT: fired before show
+	/* EVENT: fired before show */
 	$("#recModal").on("show.bs.modal", function () {
 		// Init: Modal
 		$("#canvas-analyzer").show();
@@ -215,7 +226,6 @@ $("document").ready(function () {
 		$("#btn-rec-start").addClass("btn-danger");
 		$("#modal-brush-img").hide();
 		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
-
 
 		// Init: Media Recorder (FIX: Remove mime type)
 		mediaRecorder = new MediaRecorder(mediaStream);
@@ -236,7 +246,7 @@ $("document").ready(function () {
 			$("#message-modal-rec").html('<font color="blue"><i class="fas fa-spinner fa-spin"></i> 生成中 ... </font>');
 
 
-			// POST audio data to server using Ajax
+			/* POST audio data to server using Ajax */
 			// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
 			$.ajax({
 				type: "POST",
@@ -249,22 +259,18 @@ $("document").ready(function () {
 					// @param      data: Response data
 					// @param  dataType: Data type of 'data'
 
-					console.log("Ajax: POST Success and Received data !");
-					console.log(`dataType: ${dataType}`);
-					console.log("=====DATA START=====");
-					console.log(data.data);
-					console.log("=====DATA   END=====");
 					// Set Brush Image
 					brushImg = base64ToImg(data.data);
 
-					// Show Result
+					// Show Result at Modal
+					$("#modal-brush-img").show();
 					$("#modal-brush-img").append(brushImg);
 					$("#modal-brush-img>img").css("width", "128px");
-					$("#modal-brush-img").show();
-					$("#message-modal-rec").html('<strong>ブラシが生成されました！</strong>');
+					$("#message-modal-rec").html('<div style="text-align: center;"><strong>ブラシが生成されました！</strong></div>');
 
-					$("#header-current-brush").append(brushImg);
-
+					// Show Result at Header
+					$("#header-current-brush>img").remove();
+					$("#header-current-brush").append(brushImg.cloneNode());
 					$("#header-current-brush>img").css("width", "32px");
 					$("#header-current-brush>img").css("border", "1px solid #bbb;");
 
@@ -281,16 +287,11 @@ $("document").ready(function () {
 
 			});
 
-			// File Download
-			// const a = document.createElement('a');
-			// a.href = URL.createObjectURL(new Blob(audioData));
-			// a.download = 'rec.webm';
-			// a.click();
 		});
 
 	});
 
-	// EVENT: fired after closed
+	/* EVENT: fired after closed */
 	$("#recModal").on("hidden.bs.modal", function () {
 		// Stop MediaRecorder
 		if (mediaRecorder.state === "recording") {
@@ -300,7 +301,7 @@ $("document").ready(function () {
 
 
 	$("#btn-rec-start").on("click", function () {
-		if ( $("#btn-rec-start").hasClass("btn-danger") ) {
+		if ($("#btn-rec-start").hasClass("btn-danger")) {
 			// Change View
 			$("#btn-rec-start").removeClass("btn-danger");
 			$("#btn-rec-start").addClass("btn-primary");
@@ -342,7 +343,6 @@ $("document").ready(function () {
 	// WebSocket: Message arrived
 	wSock.onmessage = function (ev) {
 		var data = JSON.parse(ev.data);
-		// var data = ev.data;
 		var action = data.action;
 		var payload = data.payload;
 
@@ -371,15 +371,23 @@ $("document").ready(function () {
 
 });
 
+/***************************************/
+/********** DOM SETTINGS ***************/
+/***************************************/
 
 
-/* Function Declarations */
+
+/************************************************/
+/********** FUNCTION DECLARATIONS ***************/
+/************************************************/
+
+// Support Retina Display ( scale = 200% )
 function htmlCanvasRetinization(jqCanvas, ctx) {
 	var canvasCssW = parseInt(jqCanvas.css("width"));
 	var canvasCssH = parseInt(jqCanvas.css("height"));
 
 
-	jqCanvas.prop("width",  canvasCssW * 2);
+	jqCanvas.prop("width", canvasCssW * 2);
 	jqCanvas.prop("height", canvasCssH * 2);
 
 	ctx.scale(2, 2);
@@ -400,11 +408,9 @@ function drawing(evMouse) {
 	var dist = calcDistance(pLast, pCurrent);
 	var angl = calcAngle(pLast, pCurrent);
 
-	// console.log(`Dist: ${dist}, Angle: ${angl}`);
-
 	ctx2d.beginPath();
 
-	// Set line style
+	// Set: Line Style
 	if (!isBrushDrawing) {
 		ctx2d.lineCap = ctx2d.lineJoin = "round";
 		ctx2d.strokeStyle = color.val();
@@ -416,18 +422,19 @@ function drawing(evMouse) {
 		y = pLast.y + i * Math.sin(angl);
 
 		if (isBrushDrawing) {
-			// Draw brush
+			// Draw Brush
 			ctx2d.drawImage(brushImg, x - 0.5 * brushImg.naturalWidth, y - 0.5 * brushImg.naturalHeight);
 		} else {
-			// Draw line
+			// Draw Line
 			ctx2d.lineTo(x, y);
-			// Send Drawing via WebSocket
 		}
+		// Send Drawing via WebSocket
 		sendCanvasWS(x, y);
 	}
 	ctx2d.stroke();
 }
 
+// Store canvas from canvas stack
 function canvasPush() {
 	var w = ctx2d.canvas.width;
 	var h = ctx2d.canvas.height;
@@ -443,6 +450,7 @@ function canvasPush() {
 	$("#btn-undo").text("Undo (" + undoStack.length + ")");
 }
 
+// Restore canvas from canvas stack
 function canvasPop() {
 	var imgData = undoStack.pop();
 
@@ -455,6 +463,7 @@ function canvasPop() {
 	} else {
 		console.log("Stack is Empty !");
 	}
+
 	$("#btn-undo").text("Undo (" + undoStack.length + ")");
 }
 
@@ -481,8 +490,8 @@ function sendCanvasWS(x, y) {
 	wSock.send(JSON.stringify(payload));
 }
 
-// Sync Canvas using WebSocket
-function syncCanvas(payload){
+// Sync canvas using WebSocket
+function syncCanvas(payload) {
 
 	ctx2d.beginPath();
 
@@ -492,25 +501,25 @@ function syncCanvas(payload){
 		if (typeof brushBankImg === "undefined") {
 			console.log("Error!: Brush not found");
 		} else {
-			// Draw brush
+			// Draw Brush
 			ctx2d.drawImage(brushBankImg, payload.pos.x - 0.5 * brushBankImg.naturalWidth, payload.pos.y - 0.5 * brushBankImg.naturalHeight);
 		}
 
 	} else {
-		// Set line style
+		// Set: Line Style
 		ctx2d.lineCap = payload.ctx.lineCap;
 		ctx2d.lineJoin = payload.ctx.lineJoin;
 		ctx2d.strokeStyle = payload.ctx.strokeStyle;
 		ctx2d.lineWidth = payload.ctx.lineWidth;
 
-		// Draw line
+		// Draw Line
 		ctx2d.lineTo(payload.pos.x, payload.pos.y);
 		ctx2d.stroke();
 	}
 }
 
-
-function imgToBase64 (htmlImageElement) {
+// HTMLImageElement --> Base64 String
+function imgToBase64(htmlImageElement) {
 	// REF: https://qiita.com/yasumodev/items/e1708f01ff87692185cd
 	var htmlCanvas = document.createElement('canvas');
 
@@ -522,9 +531,14 @@ function imgToBase64 (htmlImageElement) {
 	return htmlCanvas.toDataURL('image/png');
 }
 
-function base64ToImg (strBase64) {
+// Base64 String --> HTMLImageElement
+function base64ToImg(strBase64) {
 	// REF: https://qiita.com/yasumodev/items/e1708f01ff87692185cd
 	var img = new Image();
 	img.src = strBase64;
 	return img;
 }
+
+/************************************************/
+/********** FUNCTION DECLARATIONS ***************/
+/************************************************/
