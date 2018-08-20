@@ -124,10 +124,10 @@ def _read_wave(path):
     return wav, params.framerate
 
 
-def extract(webm_path):
-    wav_path = webm_path.replace('.webm', '.wav')
+def extract(source_path):
+    wav_path = source_path + '.wav'
 
-    stream = ffmpeg.input(webm_path)
+    stream = ffmpeg.input(source_path)
     stream = ffmpeg.output(stream, wav_path, acodec='pcm_s16le', ac=1)
     stream = ffmpeg.overwrite_output(stream)
     ffmpeg.run(stream, capture_stderr=True)
