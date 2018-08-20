@@ -250,7 +250,7 @@ $("document").ready(function () {
 			// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
 			$.ajax({
 				type: "POST",
-				url: `http://${window.location.host}/pen`,
+				url: `https://${window.location.host}/pen`,
 				contentType: "application/octet-stream",
 				data: (new Blob(audioData, { type: 'audio/webm' })),
 				processData: false,

@@ -67,7 +67,8 @@ class PenInfoHandler(tornado.web.RequestHandler):
         # ブラシ生成
         brush_path = dump_path + '.png'
         feature = acoustic_feature.extract(dump_path)
-        img = generatePen.generateBrush(feature)
+        # 斜めのブラシ指定
+        img = generatePen.powerSpectrum2Brush(feature)
         cv2.imwrite(brush_path, img)
 
         # 生成されたブラシ画像の返却
