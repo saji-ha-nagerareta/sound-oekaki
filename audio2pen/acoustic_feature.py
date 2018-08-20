@@ -80,6 +80,8 @@ def _pitch_reaper(wav_path):
     pitches = np.array(pitches)
     pitches = pitches[pitches > 0]
     pitche = np.mean(pitches)
+
+    os.remove(pitch_path)
     return pitche
 
 
@@ -156,6 +158,7 @@ def extract(source_path):
     wav, fr = librosa.load(wav_path)
     feat['pitch_librosa'] = _pitch_librosa(wav, fr)
 
+    os.remove(wav_path)
     return feat
 
 
