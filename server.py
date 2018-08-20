@@ -21,6 +21,7 @@ TEMP_DIR = "./tmp/"
 ws_con = {}
 
 defaultRoomID = "room1234"
+userNum = 0
 
 def getRoomList():
     RoomInfo = {}
@@ -28,17 +29,14 @@ def getRoomList():
         RoomInfo[roomName] = len(connections)
     return RoomInfo
 
-def getPeopleNum(roomID):
-    return len(ws_con[roomID]) if (roomID in ws_con) else 0
-
-
 # ルート
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
+        global userNum
         arg = self.request.arguments
-        self.render('index.html',PeopleNum = getPeopleNum(defaultRoomID))
+        userNum += 1
+        self.render('index.html',PeopleNum = userNum)
         print(arg)
-
 
 # ペン情報取得
 class PenInfoHandler(tornado.web.RequestHandler):
@@ -90,18 +88,17 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
     # 接続者
     global ws_con
 
-
-
     # すべての通信を受け入れる設定
     def check_origin(self, origin):
         return True
 
     def open(self, *args, **kwargs):
+        global userNum
         if (args[0] not in ws_con):
             ws_con[args[0]] = [self]
         else:
             ws_con[args[0]].append(self)
-        print("[OPEN] room:" + args[0] + "   Member:" + str(len(ws_con[args[0]])))  # ルームID
+        print("[OPEN] room:" + args[0] + "   Member:" + str(userNum))  # ルームID
         initMessage = {"action": "ID",
                        "payload": {"id": uuid.uuid4().hex}
                        }
@@ -110,7 +107,7 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
         #人数変化
         enterNumMessage = {"action": "ENTER_USER",
                            "payload": {
-                               "num": getPeopleNum(self.path_args[0])
+                               "num": userNum
                            }}
         for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
@@ -128,13 +125,15 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
             waiter.write_message(message)  # デフォルトでバイナリはfalseなのでbinaryを送るときは変える
 
     def on_close(self):
+        global userNum
+        userNum -= 1
         ws_con[self.path_args[0]].remove(self)
-        print("[CLOSE] room:" + self.path_args[0] + "   Member:" + str(len(ws_con[self.path_args[0]])))
+        print("[CLOSE] room:" + self.path_args[0] + "   Member:" + str(userNum))
 
         # 人数変化
         enterNumMessage = {"action": "ENTER_USER",
                            "payload": {
-                               "num": getPeopleNum(self.path_args[0])
+                               "num": userNum
                            }}
         for waiter in ws_con[self.path_args[0]]:
             if waiter == self:
