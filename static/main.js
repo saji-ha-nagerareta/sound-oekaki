@@ -122,8 +122,7 @@ $("document").ready(function () {
             }));
         },
         "touchmove": function (ev) {
-            canvasPos = ev.target.getBoundingClientRect();
-            touchPos = {'x':ev.touches[0].clientX-canvasPos.left,'y':ev.touches[0].clientY-canvasPos.top};
+            touchPos = getTouchPos(ev);
             // if (isDrawing) {
                 // Save Canvas;
                 if (!isCanvasSaved) {
@@ -160,9 +159,11 @@ $("document").ready(function () {
 		isBrushDrawing = !isBrushDrawing;
 	});
 
-	$(window).on("resize", function (ev) {
-		htmlCanvasRetinization(canvas, ctx2d);
-	});
+	// モバイルだと下までスクロールするとresizeが発火してcanvasが消えてしまう
+    // Todo : モバイルとpcで分ける？
+	// $(window).on("resize", function (ev) {
+	// 	htmlCanvasRetinization(canvas, ctx2d);
+	// });
 
 	$(".number-spinner button").on("click", function () {
 		var btn = $(this);
@@ -484,5 +485,7 @@ function base64ToImg (strBase64) {
 
 function getTouchPos(ev) {
 	canvasPos = ev.target.getBoundingClientRect();
+	// console.log(ev.targetTouches[0].clientX+","+ev.targetTouches[0].clientY);
+	// console.log(ev.Touches[0].clientX+","+ev.Touches[0].clientY)
 	return {'x':ev.touches[0].clientX-canvasPos.left,'y':ev.touches[0].clientY-canvasPos.top};
 }
