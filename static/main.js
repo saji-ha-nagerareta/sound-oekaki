@@ -349,6 +349,11 @@ $("document").ready(function () {
 
 		console.log(`WebSocket: Received Message ! (action = ${action})`);
 		switch (action) {
+			case "ENTER_USER":
+				console.log("Welcome, n00b !");
+				$("#txt-card-header").text("Users: " + payload.num);
+				break;
+				
 			case "ID":
 				wsId = payload.id;
 				console.log(`WebSocket: Receive ID ! (id = ${wsId})`)
