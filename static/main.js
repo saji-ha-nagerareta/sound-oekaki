@@ -35,7 +35,7 @@ $("document").ready(function () {
 	isCanvasSaved = false;
 
 	// wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
-	wSock = new WebSocket(`ws://localhost:8888/soundOekaki/room1234`);
+	wSock = new WebSocket(`wss://localhost:8888/soundOekaki/room1234`);
 	wsId = -1;
 
 	recCanvas = $("#canvas-analyzer");
