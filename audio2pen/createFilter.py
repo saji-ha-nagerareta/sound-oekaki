@@ -2,11 +2,10 @@ import cv2
 import bezier
 import numpy as np
 import math
-import matplotlib.pyplot as plt
 
 from pprint import pprint
 
-_filterSize = 32
+_filterSize = 33
 
 # TODO:制御点を動かす
 def createFilter(n,ratio):
@@ -43,7 +42,7 @@ def createFilter(n,ratio):
 
     # 補間
     points = np.array([])
-    filterPoints = [];
+    filterPoints = []
 
     # python3のroundは特殊なので定義
     round = lambda x: int((x * 2 + 1) / 2)

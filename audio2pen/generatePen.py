@@ -3,6 +3,7 @@ from cv2 import cv2
 import numpy as np
 import sys
 from acoustic_feature import extract
+from createFilter import createFilter
 from math import cos, sin, degrees, radians, log10
 
 WIDTH, HEIGHT = 33, 33
@@ -60,17 +61,26 @@ def powerSpectrum2Brush(feature):
 def generateBrush(feature):
     db = max(feature["db"], -72) + 72  # [0:72]
 
-    # img_filter = np.random.rand(WIDTH, HEIGHT)
-    img_filter = cv2.imread("squareFilter.png")
-
+    img_filter = np.random.rand(WIDTH, HEIGHT)
 
     thr = db/72  # [0,1.0]
-    p = feature["pitch"]
+
+    p = max(feature['pitch_reaper'], 1)
+    if np.isnan(p):
+        p = 1
+    p = (log10(p) - log10(PITCH_MIN)) / \
+        (log10(PITCH_MAX) - log10(PITCH_MIN))  # p:[0,1]
+
     print(thr)
 
     img_filter[img_filter > thr] = 255
     img_filter[img_filter < thr] = 0
     img_filter = img_filter.astype(np.uint8)
+
+
+    img_filter = cv2.bitwise_not(cv2.bitwise_and(createFilter(4,1),img_filter))
+    
+
 
     print(p)
 
@@ -89,7 +99,15 @@ def generateBrush(feature):
         img_hsv[:, :, i] = x
 
     img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
-    return img_rgb
+    img_rgba = np.ndarray((WIDTH, HEIGHT, 4), dtype=np.uint8)
+
+    for i, x in enumerate([img_rgb[:, :, 2], img_rgb[:, :, 1], img_rgb[:, :, 0]]):
+        img_rgba[:, :, i] = x
+
+    img_rgba[:, :, 3] = 255-img_filter
+
+
+    return img_rgba
 
 # for test
 if __name__ == '__main__':
@@ -98,12 +116,12 @@ if __name__ == '__main__':
     #   print("usage: ./generatePen.py [WIDTH] [HEIGHT] [file-name] [audio-name]")
     #   quit()
 
-    audio_name = "c.webm"
-    argv = ["xxx", "32", "32", audio_name.replace(".webm", ".png"), audio_name]
-    # WIDTH, HEIGHT = [int(x) for x in argv[1:3]]
+    audio_name = "c2.webm"
+    argv = ["xxx", "33", "33", audio_name.replace(".webm", ".png"), audio_name]
     image_name = argv[3]
     audio_name = argv[4]
     feature = extract(audio_name)
-    img = powerSpectrum2Brush(feature)
-    cv2.imwrite(image_name, img)
+    # img = powerSpectrum2Brush(feature)
+    img = generateBrush(feature)
+    cv2.imwrite("geneb.png", img)
 
