@@ -20,6 +20,7 @@ TEMP_DIR = "./tmp/"
 # 各ルーム接続者
 ws_con = {}
 
+defaultRoomID = "room1234"
 
 def getRoomList():
     RoomInfo = {}
@@ -27,12 +28,15 @@ def getRoomList():
         RoomInfo[roomName] = len(connections)
     return RoomInfo
 
+def getPeopleNum(roomID):
+    return len(ws_con[roomID]) if (roomID in ws_con) else 0
+
 
 # ルート
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         arg = self.request.arguments
-        self.render('index.html')
+        self.render('index.html',PeopleNum = getPeopleNum(defaultRoomID))
         print(arg)
 
 
@@ -86,6 +90,8 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
     # 接続者
     global ws_con
 
+
+
     # すべての通信を受け入れる設定
     def check_origin(self, origin):
         return True
@@ -100,6 +106,16 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
                        "payload": {"id": uuid.uuid4().hex}
                        }
         self.write_message(initMessage)
+
+        #人数変化
+        enterNumMessage = {"action": "ENTER_USER",
+                           "payload": {
+                               "num": getPeopleNum(self.path_args[0])
+                           }}
+        for waiter in ws_con[self.path_args[0]]:
+            if waiter == self:
+                continue
+            waiter.write_message(enterNumMessage)
         # Todo:過去キャンバス送信
 
     def on_message(self, message):
@@ -114,6 +130,17 @@ class broadcastDrawInfoHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         ws_con[self.path_args[0]].remove(self)
         print("[CLOSE] room:" + self.path_args[0] + "   Member:" + str(len(ws_con[self.path_args[0]])))
+
+        # 人数変化
+        enterNumMessage = {"action": "ENTER_USER",
+                           "payload": {
+                               "num": getPeopleNum(self.path_args[0])
+                           }}
+        for waiter in ws_con[self.path_args[0]]:
+            if waiter == self:
+                continue
+            waiter.write_message(enterNumMessage)
+
 
 
 # 部屋情報
