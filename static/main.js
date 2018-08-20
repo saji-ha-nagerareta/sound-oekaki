@@ -92,13 +92,51 @@ $("document").ready(function () {
 					isCanvasSaved = true;
 				}
 				// Drawing
-				drawing(ev);
+				mousePos = { 'x': ev.offsetX, 'y': ev.offsetY };
+				drawing(mousePos);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		},
 		"mouseout": function (ev) {
 			isDrawing = false;
-		}
+		},
+        "touchstart": function (ev) {
+            isCanvasSaved = false;
+            // isDrawing = true;
+            // Send Brush data when isBrushDrawing
+            if (isBrushDrawing) {
+                wSock.send(JSON.stringify({
+                    "action": "SEND_BRUSH",
+                    "payload": {
+                        "id": wsId,
+                        "imgData": imgToBase64(brushImg)
+                    }
+                }));
+            }
+            pLast = getTouchPos(ev);;
+        },
+        "touchend": function (ev) {
+            // isDrawing = false;
+            wSock.send(JSON.stringify({
+                "action": 'EOD' // End of Drawing
+            }));
+        },
+        "touchmove": function (ev) {
+            canvasPos = ev.target.getBoundingClientRect();
+            touchPos = {'x':ev.touches[0].clientX-canvasPos.left,'y':ev.touches[0].clientY-canvasPos.top};
+            // if (isDrawing) {
+                // Save Canvas;
+                if (!isCanvasSaved) {
+                    canvasPush()
+                    isCanvasSaved = true;
+                }
+                // Drawing
+                drawing(touchPos);
+
+            // }
+            pLast = touchPos;
+        }
+
 	});
 
 	$("#btn-clear-canvas").on("click", function (ev) {
@@ -306,8 +344,7 @@ function calcAngle(p0, p1) {
 	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-function drawing(evMouse) {
-	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
+function drawing(pCurrent) {
 	var penImg = $("img#img-pen-style")[0];
 
 	var dist = calcDistance(pLast, pCurrent);
@@ -443,4 +480,9 @@ function base64ToImg (strBase64) {
 	$("#label-brush-img").text("RECEIVED!!");
 	$("#brush-img")[0].src = strBase64;
 	return img;
+}
+
+function getTouchPos(ev) {
+	canvasPos = ev.target.getBoundingClientRect();
+	return {'x':ev.touches[0].clientX-canvasPos.left,'y':ev.touches[0].clientY-canvasPos.top};
 }
