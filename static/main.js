@@ -77,38 +77,6 @@ $("document").ready(function () {
 				drawing(ev);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
-		},
-		"touchstart": function (ev) {
-			isCanvasSaved = false;
-			isDrawing = true;
-			// Send Brush data when isBrushDrawing
-			if (isBrushDrawing) {
-				wSock.send(JSON.stringify({
-					"action": "SEND_BRUSH",
-					"payload": {
-						"id": wsId,
-						"imgData": imgToBase64(brushImg)
-					}
-				}));
-			}
-		},
-		"touchend": function (ev) {
-			isDrawing = false;
-			wSock.send(JSON.stringify({
-				"action": 'EOD' // End of Drawing
-			}));
-		},
-		"touchmove": function (ev) {
-			if (isDrawing) {
-				// Save Canvas;
-				if (!isCanvasSaved) {
-					canvasPush()
-					isCanvasSaved = true;
-				}
-				// Drawing
-				drawing(ev);
-			}
-			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
 		}
 	});
 

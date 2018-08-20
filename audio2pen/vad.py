@@ -86,3 +86,18 @@ def power(wav, frame_len, frame_step, th=None):
         l['end'] = l['end']*frame_step + frame_len
 
     return label
+
+
+def post_filter(label, pause_len):
+    if len(label) == 0:
+        return label
+
+    filtered_label = []
+    start = label[0]['start']
+    for i in range(1, len(label)):
+        if (label[i]['start'] - label[i-1]['end']) > pause_len:
+            filtered_label.append({'start': start, 'end': label[i-1]['end']})
+            start = label[i]['start']
+    filtered_label.append({'start': start, 'end': label[-1]['end']})
+
+    return filtered_label
