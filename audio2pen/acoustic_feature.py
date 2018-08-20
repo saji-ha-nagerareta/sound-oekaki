@@ -84,13 +84,16 @@ def _pitch_reaper(wav_path):
 
 
 def _sound_section(wav, sample_rate):
-    frame_len_ms = 40
-    frame_step_ms = 20
+    frame_len_ms = 25
+    frame_step_ms = 15
+    pause_len_ms = 50
     frame_len = frame_len_ms * sample_rate // 1000
     frame_step = frame_step_ms * sample_rate // 1000
+    pause_len = pause_len_ms * sample_rate // 1000
     th = None
 
     label = vad.power(wav, frame_len=frame_len, frame_step=frame_step, th=th)
+    label = vad.post_filter(label, pause_len=pause_len)
     _write_label(label, sample_rate)
 
     sect = []
