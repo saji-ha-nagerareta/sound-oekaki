@@ -38,6 +38,13 @@ input#pen-size {
 	min-width: 30px;
 }
 
-/* img {
-	display: none;
-} */
+#header-current-brush {
+	text-align: right;
+}
+
+#modal-brush-img {
+	/* border: 1px solid #eee; */
+	text-align: center;
+	width: 128px;
+	height: 128px;
+}

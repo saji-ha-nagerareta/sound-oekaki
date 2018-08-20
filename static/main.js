@@ -210,10 +210,13 @@ $("document").ready(function () {
 
 	// EVENT: fired before show
 	$("#recModal").on("show.bs.modal", function () {
-		// Restore: Modal
+		// Init: Modal
 		$("#canvas-analyzer").show();
-		$("#btn-modal-close").removeProp("disabled");
-		$("#btn-rec-start").removeProp("disabled");
+		$("#btn-modal-close").prop("disabled", "");
+		$("#btn-rec-start").prop("disabled", "");
+		$("#btn-rec-start").removeClass("btn-primary");
+		$("#btn-rec-start").addClass("btn-danger");
+		$("#modal-brush-img").hide();
 		$("#message-modal-rec").html("<big>録音するには<strong>Start</strong>を押してください</big>");
 
 
@@ -233,7 +236,7 @@ $("document").ready(function () {
 			$("#canvas-analyzer").hide();
 			$("#btn-modal-close").prop("disabled", true);
 			$("#btn-rec-start").prop("disabled", true);
-			$("#message-modal-rec").html('<font color="blue"><i class="fa fa-circle-o-notch fa-spin"></i> 生成中 ... </font>');
+			$("#message-modal-rec").html('<font color="blue"><i class="fas fa-spinner fa-spin"></i> 生成中 ... </font>');
 
 
 			// POST audio data to server using Ajax
@@ -258,8 +261,16 @@ $("document").ready(function () {
 					brushImg = base64ToImg(data.data);
 
 					// Show Result
-					$("#modal-body");
-					$("#message-modal-rec").text('ブラシが生成されました。');
+					$("#modal-brush-img").append(brushImg);
+					$("#modal-brush-img>img").css("width", "128px");
+					$("#modal-brush-img").show();
+					$("#message-modal-rec").html('<strong>ブラシが生成されました！</strong>');
+
+					$("#header-current-brush").append(brushImg);
+
+					$("#header-current-brush>img").css("width", "32px");
+					$("#header-current-brush>img").css("border", "1px solid #bbb;");
+
 				},
 				error: function (XMLHttpRequest, textStatus, errorThrown) {
 					// @param  XMLHttpRequest: XMLHttpRequest object
@@ -298,6 +309,9 @@ $("document").ready(function () {
 			$("#btn-rec-start").addClass("btn-primary");
 			$("#btn-rec-start").text("Stop Rec");
 			$("#message-modal-rec").html("<big><strong><font color='red'>録音中...</font></strong></big>");
+
+			// Delete Previous Brush
+			$("#modal-brush-img>img").remove();
 
 			// Canvas Reset
 			recCanvasCtx.fillStyle = "#fff";

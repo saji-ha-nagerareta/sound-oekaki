@@ -14,7 +14,7 @@
   <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
   <!-- Font Awesome -->
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
 
 
 </head>
@@ -34,7 +34,15 @@
 
     <div class="card">
       <div class="card-header">
-        <div class="display-4">Canvas</div>
+        <div class="row">
+          <div class="col">
+            <span class="display-4">Canvas</span>
+          </div>
+          <div class="col display-4" id="header-current-brush">
+            <!-- <i class="fas fa-stamp"></i> -->
+          </div>
+        </div>
+
       </div>
       <div class="card-img-bottom">
         <canvas id="canvas"></canvas>
@@ -78,9 +86,11 @@
                     </button>
                   </div>
                   <div class="modal-body">
-                    <span id="message-modal-rec">
+                    <div id="modal-brush-img">
+                    </div>
+                    <div id="message-modal-rec">
                       <big>録音するには<strong>Start</strong>を押してください</big>
-                    </span>
+                    </div>
                     <canvas id="canvas-analyzer"></canvas>
                   </div>
                   <div class="modal-footer">
