@@ -23,54 +23,65 @@ sound-oekaki は 音で絵を書く、新しいスタイルのペインティン
 
 ## How to Use
 
-### 1. Setup Server
+### 1. サーバーのセットアップ
 
 1. Python 3.x のインストール
 
 1. 必要パッケージのインストール
-	- `ffmpeg`: 音声の変換
-		- 各OS似合わせてコマンドラインツールをインストール
 
-		- Python 用のラッパー `ffmpeg-python` をインストール
-		```bash
-		> pip3 install ffmpeg-python
-		```
+- `ffmpeg`: 音声の変換  
+	+ 各OS似合わせてコマンドラインツールをインストール  
 
-	- `REAPER`: Google製 音声解析フレームワーク
-	[GitHub - google/REAPER](https://github.com/google/REAPER)
+	+ Python 用のラッパー `ffmpeg-python` をインストール    
 
-	- `tornado`: Python Web フレームワーク
-	```bash
-	> pip3 install torando
-	```
+	```bash  
+	> pip3 install ffmpeg-python  
+	```  
 
-	- `librosa`: 音声信号処理ライブラリ
-	```bash
-	> pip3 install librosa
-	```
+- `REAPER`: Google製 音声解析フレームワーク  
 
-	- `numpy`: 行列計算ライブラリ
-	```bash
-	> pip3 install numpy
-	```
+[GitHub - google/REAPER](https://github.com/google/REAPER)  
 
-	- `scipy`: 科学計算ライブラリ
-	```bash
-	> pip3 install scipy
-	```
+- `tornado`: Python Web フレームワーク  
 
-	- `opencv-python`: 画像処理ライブラリ
-	```bash
-	> pip3 install opencv-python
-	```
+```bash  
+> pip3 install torando  
+```  
 
-	- `bezier`: ベジエ曲線用ライブラリ
-	```bash
-	> pip3 install bezier
-	```
+- `librosa`: 音声信号処理ライブラリ  
+
+```bash  
+> pip3 install librosa  
+```  
+
+- `numpy`: 行列計算ライブラリ  
+
+```bash  
+> pip3 install numpy  
+```  
+
+- `scipy`: 科学計算ライブラリ  
+
+```bash  
+> pip3 install scipy  
+```  
+
+- `opencv-python`: 画像処理ライブラリ  
+
+```bash  
+> pip3 install opencv-python  
+```  
+
+- `bezier`: ベジエ曲線用ライブラリ  
+
+```bash  
+> pip3 install bezier  
+```  
 
 
-1. サーバーの起動
-```bash
-> python3 server.py
-```
+### 2. サーバーの起動  
+
+```bash  
+> python3 server.py  
+```  
+
