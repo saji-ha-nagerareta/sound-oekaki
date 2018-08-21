@@ -42,7 +42,7 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
+	wSock = new WebSocket(`wss://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
 	recCanvas = $("#canvas-analyzer");
@@ -108,15 +108,63 @@ $("document").ready(function () {
 					isCanvasSaved = true;
 				}
 				// Drawing
-				drawing(ev);
+				mousePos = { 'x': ev.offsetX, 'y': ev.offsetY };
+				drawing(mousePos);
 			}
 			pLast = { 'x': ev.offsetX, 'y': ev.offsetY };
-		}
+		},
 
+		"mouseout": function (ev) {
+			isDrawing = false;
+		},
+
+		"touchstart": function (ev) {
+			disableScroll();
+			isCanvasSaved = false;
+			// isDrawing = true;
+			// Send Brush data when isBrushDrawing
+			if (isBrushDrawing) {
+				wSock.send(JSON.stringify({
+					"action": "SEND_BRUSH",
+					"payload": {
+						"id": wsId,
+						"imgData": imgToBase64(brushImg)
+					}
+				}));
+			}
+			pLast = getTouchPos(ev);;
+		},
+		"touchend": function (ev) {
+			// isDrawing = false;
+			enableScroll();
+			wSock.send(JSON.stringify({
+					"action": 'EOD' // End of Drawing
+			}));
+		},
+		"touchmove": function (ev) {
+			touchPos = getTouchPos(ev);
+			// if (isDrawing) {
+				// Save Canvas;
+				if (!isCanvasSaved) {
+					canvasPush()
+					isCanvasSaved = true;
+				}
+				// Drawing
+				drawing(touchPos);
+			// }
+			pLast = touchPos;
+		}
 	});
 
 	$("#btn-clear-canvas").on("click", function (ev) {
 		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
+	});
+
+	$("#btn-save-canvas").on("click", function (ev) {
+		var anchor = document.createElement('a');
+		anchor.download = "canvas.png";
+		anchor.href = canvas[0].toDataURL();
+		anchor.click();
 	});
 
 	$("#btn-undo").on("click", function (ev) {
@@ -150,9 +198,11 @@ $("document").ready(function () {
 		isBrushDrawing = !isBrushDrawing;
 	});
 
-	$(window).on("resize", function (ev) {
-		htmlCanvasRetinization(canvas, ctx2d);
-	});
+	// モバイルだと下までスクロールするとresizeが発火してcanvasが消えてしまう
+    // Todo : モバイルとpcで分ける？
+	// $(window).on("resize", function (ev) {
+	// 	htmlCanvasRetinization(canvas, ctx2d);
+	// });
 
 	$(".number-spinner button").on("click", function () {
 		var btn = $(this);
@@ -407,9 +457,7 @@ function calcAngle(p0, p1) {
 	return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-function drawing(evMouse) {
-	var pCurrent = { 'x': evMouse.offsetX, 'y': evMouse.offsetY };
-
+function drawing(pCurrent) {
 	var dist = calcDistance(pLast, pCurrent);
 	var angl = calcAngle(pLast, pCurrent);
 
@@ -542,6 +590,50 @@ function base64ToImg(strBase64) {
 	var img = new Image();
 	img.src = strBase64;
 	return img;
+}
+
+function getTouchPos(ev) {
+	canvasPos = ev.target.getBoundingClientRect();
+	return { 'x': ev.touches[0].clientX - canvasPos.left, 'y': ev.touches[0].clientY - canvasPos.top };
+}
+
+// Hacks for Disable Scrolling
+// REF: https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
+
+// left: 37, up: 38, right: 39, down: 40,
+// spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
+var keys = { 37: 1, 38: 1, 39: 1, 40: 1 };
+
+function preventDefault(e) {
+	e = e || window.event;
+	if (e.preventDefault)
+		e.preventDefault();
+	e.returnValue = false;
+}
+
+function preventDefaultForScrollKeys(e) {
+	if (keys[e.keyCode]) {
+		preventDefault(e);
+		return false;
+	}
+}
+
+function disableScroll() {
+	if (window.addEventListener) // older FF
+		window.addEventListener('DOMMouseScroll', preventDefault, false);
+	window.onwheel = preventDefault; // modern standard
+	window.onmousewheel = document.onmousewheel = preventDefault; // older browsers, IE
+	window.ontouchmove = preventDefault; // mobile
+	document.onkeydown = preventDefaultForScrollKeys;
+}
+
+function enableScroll() {
+	if (window.removeEventListener)
+		window.removeEventListener('DOMMouseScroll', preventDefault, false);
+	window.onmousewheel = document.onmousewheel = null;
+	window.onwheel = null;
+	window.ontouchmove = null;
+	document.onkeydown = null;
 }
 
 /************************************************/
