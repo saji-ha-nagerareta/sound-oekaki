@@ -49,7 +49,7 @@ class PenInfoHandler(tornado.web.RequestHandler):
 
     def post(self):
         print(self.request.headers)
-        print(self.request.body)
+       # print(self.request.body)
 
         # 仮実装。Ajaxで送られてきていることを想定
 

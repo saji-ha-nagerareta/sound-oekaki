@@ -42,7 +42,7 @@ $("document").ready(function () {
 	isBrushDrawing = false;
 	isCanvasSaved = false;
 
-	wSock = new WebSocket(`ws://${window.location.host}/soundOekaki/room1234`);
+	wSock = new WebSocket(`wss://${window.location.host}/soundOekaki/room1234`);
 	wsId = -1;
 
 	recCanvas = $("#canvas-analyzer");
@@ -158,6 +158,13 @@ $("document").ready(function () {
 
 	$("#btn-clear-canvas").on("click", function (ev) {
 		ctx2d.clearRect(0, 0, canvas[0].width, canvas[0].height);
+	});
+
+	$("#btn-save-canvas").on("click", function (ev) {
+		var anchor = document.createElement('a');
+		anchor.download = "canvas.png";
+		anchor.href = canvas[0].toDataURL();
+		anchor.click();
 	});
 
 	$("#btn-undo").on("click", function (ev) {
@@ -293,7 +300,7 @@ $("document").ready(function () {
 			// REF: http://semooh.jp/jquery/api/ajax/jQuery.ajax/options/
 			$.ajax({
 				type: "POST",
-				url: `http://${window.location.host}/pen`,
+				url: `https://${window.location.host}/pen`,
 				contentType: "application/octet-stream",
 				data: (new Blob(audioData, { type: 'audio/webm' })),
 				processData: false,
